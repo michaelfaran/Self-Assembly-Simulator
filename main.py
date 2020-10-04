@@ -1,3 +1,5 @@
+import numpy, constants
+
 def metropolis(p):
     if p>=1:
         return True
