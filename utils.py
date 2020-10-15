@@ -1,4 +1,6 @@
-import constants, numpy as np, random
+import constants
+import numpy as np
+import random
 from board import Board
 from particle import Particle
 from typing import Union, Optional, List
@@ -27,6 +29,7 @@ def same_state_interaction(p1: Particle, p2: Particle, inner_state: int):
 def interaction(p1: Particle, p2: Optional[Particle]):
     """
     General interaction calculator for 2 adjacent particles (with any internal state)
+    TODO: make it more modular to add other kinds of interactions.
     """
     if p2 is None:
         return 0  # There's no particle in the adjacent slot, therefore no interaction
@@ -34,7 +37,7 @@ def interaction(p1: Particle, p2: Optional[Particle]):
         """
         If the particles are from the same internal state,
         this expression simply evaluates the same_state_interaction.
-        Otherwise, the interaction value is as eq. 2 in the paper.
+        Otherwise, the interaction value is as Eq. 2 in the paper.
         """
         return 0.5 * (same_state_interaction(p1, p2, p1.inner_state)
                       + same_state_interaction(p1, p2, p2.inner_state))
@@ -69,14 +72,13 @@ def physical_energy_difference(p: Particle, next_loc: List[int], board: Board):
     This difference is needed to calculate the move proposal acceptation probability
     to use in the Metropolis Criteria.
     """
-    new_energy = sum([interaction(p, board.get_particle(loc)) for loc in adjacent_locs(next_loc)])
-    curr_energy = p.energy
+    new_energy = sum([interaction(p, board.get_particle(loc)) for loc in adjacent_locs(next_loc, board)])
     return new_energy - p.energy
 
 
 def move_attempt(p: Particle, board: Board):
     """
-    Gets particle, and handles a move attempt - Changes the location & energy of the particle & it's neghibors if
+    Gets particle, and handles a move attempt - Changes the location & energy of the particle & it's neighbors if
     successful, else does nothing.
     """
     new_loc = p.loc.copy()
@@ -91,7 +93,7 @@ def move_attempt(p: Particle, board: Board):
                 p.update_energy(old_loc, new_loc)
 
 
-def are_nn(p1: Particle, p2: Particle, internal_state: int):
+def are_nn(p1: Particle, p2: Particle, inner_state: int):
     """
     Determining if 2 particles are nearest neighbors (nn),
     in the target that matches an internal state.
