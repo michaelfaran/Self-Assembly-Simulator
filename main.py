@@ -1,27 +1,32 @@
+from typing import IO
+from exceptions import *
+import json
 from board import Board
-import matplotlib as mpl
-from matplotlib import pyplot
-import numpy as np
+from simulation_cfg import SimulationCfg, TargetCfg
+CFG_FILE = "cfg.json"
 
-"""
-board = Board(10, 8)
-grid_copy = np.copy(board.grid)
-occupied_positions = board.grid != None
-grid_copy[occupied_positions] = grid_copy[]
 
-# make a color map of fixed colors
-cmap = mpl.colors.ListedColormap(['b','g','r','c','m','y','k','w'])
-bounds=[x-0.5 for x in range(9)]
-norm = mpl.colors.BoundaryNorm(bounds, cmap.N)
+def load_cfg(cfg_file: IO) -> dict:
+    cfg = json.loads(cfg_file)
+    validate_cfg(cfg)  # this should throw exceptions
+    return cfg
 
-# tell imshow about color map so that only set colors are used
-img = pyplot.imshow(vals,interpolation='nearest',
-                    cmap = cmap,norm=norm)
 
-# make a color bar
-pyplot.colorbar(img,cmap=cmap,
-                norm=norm,boundaries=bounds,ticks=[-5,0,5])
+def validate_cfg(cfg: dict):
+    return True
 
-pyplot.show()
-"""
 
+def main():
+    target1 = TargetCfg()
+    target1.strong_interaction = 1
+    target1.weak_interaction = 1
+    target1.num_of_instances = 3
+    cfg = SimulationCfg()
+    cfg.length = 4
+    cfg.num_of_particles = 9
+    cfg.targets_cfg = [target1]
+    board = Board(cfg)
+    print(board.grid)
+
+if __name__ == '__main__':
+    main()
