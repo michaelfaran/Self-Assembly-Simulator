@@ -3,10 +3,10 @@ import numpy as np
 import random
 from typing import Union, Optional, List
 
-neighbor_directions = {"up": (0, 1),
-                            "down": (0, -1),
-                            "left": (-1, 0),
-                            "right": (1, 0)}
+neighbor_directions = {"right": (0, 1),
+                            "left": (0, -1),
+                            "up": (-1, 0),
+                            "down": (1, 0)}
 
 
 def metropolis(p: Union[float, int]):
@@ -24,14 +24,18 @@ def get_neighboring_elements(array: np.ndarray, x: int, y: int, is_cyclic: bool 
 
     neighboring_elements = {}
     for direction, delta in neighbor_directions.items():
-        neighbor_coordinates = ((x + delta[0]) % x_dimension, (y + delta[1]) % y_dimension) if is_cyclic \
-            else (x + delta[0], y + delta[1])
+        if is_cyclic:
+            neighbor_coordinates = ((x + delta[0]) % x_dimension, (y + delta[1]) % y_dimension)
+        else:
+            neighbor_coordinates = (x + delta[0], y + delta[1])
         try:
-            neighboring_elements[direction] = array[neighbor_coordinates[0]][neighbor_coordinates[1]]
+            if is_coordinates_in_bounds(neighbor_coordinates, x_dimension, y_dimension):
+                neighboring_elements[direction] = array[neighbor_coordinates[0]][neighbor_coordinates[1]]
         except IndexError:
             pass
 
     return neighboring_elements
 
 
-
+def is_coordinates_in_bounds(coordinates: tuple, x_dimension: int, y_dimension: int):
+    return 0 <= coordinates[0] < x_dimension and 0 <= coordinates[1] < y_dimension

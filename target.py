@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import utils
+import math
+from exceptions import NonSquareParticlesNumber
 
 
 class Target(object):
@@ -11,6 +13,8 @@ class Target(object):
         self.strong_interaction = strong_interaction
 
     def build_adjacency_matrix(self, num_of_particles) -> np.ndarray:
+        if num_of_particles != math.isqrt(num_of_particles)**2:
+            raise NonSquareParticlesNumber()
         array_length = int(num_of_particles ** 0.5)
         particles_list = [i for i in range(num_of_particles)]
         random.shuffle(particles_list)
@@ -19,8 +23,8 @@ class Target(object):
 
         for x in range(array_length):
             for y in range(array_length):
-                neighbours = utils.get_neighboring_elements(particles, x, y)
-                for direction, element in neighbours.items():
+                neighbors = utils.get_neighboring_elements(particles, x, y)
+                for direction, element in neighbors.items():
                     adjacency_matrix[particles[x][y], element] = 1
 
         return adjacency_matrix
