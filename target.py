@@ -19,7 +19,7 @@ class Target(object):
 
         for x in range(array_length):
             for y in range(array_length):
-                neighbours = utils.get_neighborig_elements(particles, x, y)
+                neighbours = utils.get_neighboring_elements(particles, x, y)
                 for direction, element in neighbours.items():
                     adjacency_matrix[particles[x][y], element] = 1
 

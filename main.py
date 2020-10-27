@@ -28,5 +28,6 @@ def main():
     board = Board(cfg)
     print(board.grid)
 
+
 if __name__ == '__main__':
     main()

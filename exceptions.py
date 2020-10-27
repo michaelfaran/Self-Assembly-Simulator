@@ -11,6 +11,7 @@ class TooManyParticlesError(SizeError):
         msg = f"Grid has {size ** 2} slots, which isn't enough for {n} particles"
         super().__init__(msg)
 
-class InvaildCfgError(Exception):
+
+class InvalidCfgError(Exception):
     def __init__(self):
         super().__init__("Invalid configuration exception")

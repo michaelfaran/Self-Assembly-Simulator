@@ -53,7 +53,7 @@ class Board:
         p = self.particles[particle_id]
         p_target = self.targets[p.inner_state]
         energy = 0
-        for direction, neighbour_id in utils.get_neighborig_elements(self.grid, p.x, p.y, is_cyclic=True):
+        for direction, neighbour_id in utils.get_neighboring_elements(self.grid, p.x, p.y, is_cyclic=True):
             n = self.particles[neighbour_id]
             n_target = self.targets[n.inner_state]
             energy += p_target.get_energy(p, n) + n_target.get_energy(n, p)
@@ -67,7 +67,7 @@ class Board:
 
     def physical_move(self, ):
         particle = random.choice(self.particles)
-        direction = random.choice(utils.neighboor_directions.keys())
+        direction = random.choice(utils.neighbor_directions.keys())
         if not self.is_move_allowed(particle, direction):
             return
         original_energy = particle.energy
