@@ -8,6 +8,4 @@ class Particle:
         self.id = particle_id
         self.x = None
         self.y = None
-        self.inner_state = random.randrange(0, constants.m)
-        self.energy = 0
-        self.neighbors = []
+        self.inner_state = random.randrange(0, constants.m) #TODO: replace me with the cfg shit.

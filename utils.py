@@ -2,6 +2,8 @@ import constants
 import numpy as np
 import random
 from typing import Union, Optional, List
+from particle import Particle
+from target import Target
 
 neighbor_directions = {"right": (0, 1),
                             "left": (0, -1),
@@ -9,7 +11,7 @@ neighbor_directions = {"right": (0, 1),
                             "down": (1, 0)}
 
 
-def metropolis(p: Union[float, int]):
+def metropolis(p: Union[float, int]) -> bool:
     """
     Implements the Metropolis criterion, gets the acceptation probability p
     """
@@ -20,6 +22,11 @@ def metropolis(p: Union[float, int]):
 
 
 def get_neighboring_elements(array: np.ndarray, x: int, y: int, is_cyclic: bool = False) -> dict:
+    """
+    Gets matrix of elements, and returns dictionary
+    of the neighbors elements of a given index.
+    Elements can be id's (like in target) or Particles.
+    """
     x_dimension, y_dimension = array.shape[0], array.shape[1]
 
     neighboring_elements = {}
@@ -39,3 +46,9 @@ def get_neighboring_elements(array: np.ndarray, x: int, y: int, is_cyclic: bool 
 
 def is_coordinates_in_bounds(coordinates: tuple, x_dimension: int, y_dimension: int):
     return 0 <= coordinates[0] < x_dimension and 0 <= coordinates[1] < y_dimension
+
+
+def calc_interaction(p1: Particle, p2: Particle, targets: List[Target]) -> Union[int, float]:
+
+    return 0.5 * (targets[p1.inner_state].get_energy(p1.id, p2.id) +
+                             targets[p2.inner_state].get_energy(p1.id, p2.id))
