@@ -13,10 +13,7 @@ class Board:
     particles: List[Particle]
     grid: np.ndarray
     targets: List[Target]
-    """
-    TODO API:
-    move_particle(particle, new_loc)
-    """
+
 
     def __init__(self, cfg):
         self.cfg = cfg
@@ -75,6 +72,10 @@ class Board:
         # TODO: complete me
 
     def physical_move(self, particle: Particle) -> None:
+        """
+        Gets particle, and attempting to make a physical move according to
+        energy difference metropolis query.
+        """
         direction = random.choice(utils.neighbor_directions.values())
         direction_delta = utils.neighbor_directions[direction]
 
@@ -95,6 +96,8 @@ class Board:
             energy_difference += utils.calc_interaction(particle, neighbor, self.targets)
 
         if utils.metropolis(-energy_difference):
+            self.grid[particle.x][particle.y] = -1
+            self.grid[new_x][new_y] = particle.id
             particle.x = new_x
             particle.y = new_y
         return
@@ -103,7 +106,10 @@ class Board:
 
 
     def is_move_allowed(self, particle: Particle, direction: str, is_cyclic=False) -> bool:
-
+        """
+        Gets particle and movement direction (up/down/left/right) and cyclicity, and decides
+        if the move is allowed (bounds & occupation considerations).
+        """
         delta = utils.neighbor_directions[direction]
         length = self.grid.shape[0]  # Assuming square grid.
 
