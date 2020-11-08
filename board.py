@@ -69,6 +69,8 @@ class Board:
     def turn(self):
         particle = random.choice(self.particles)
         self.physical_move(particle)
+        particle = random.choice(self.particles)
+        # self.state_change(particle)
         # TODO: complete me
 
     def physical_move(self, particle: Particle) -> None:
@@ -122,3 +124,19 @@ class Board:
             return self.grid[new_coordinates[0]][new_coordinates[1]] == -1
 
         return False
+
+    def state_change(self, particle: Particle, local_drive = False) -> None:
+        """
+        Handles the inner state change attempt of a particle.
+        TODO: UNFINISHED
+        """
+        energy_difference = 0
+        new_state = random.randrange(0, len(self.targets))
+        neighbors = [self.particles[neighbor_id] for neighbor_id
+                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y).values()]
+        for neighbor in neighbors:
+            energy_difference -= utils.calc_interaction(particle, neighbor, self.targets)
+        particle.inner_state = new_state # Only for new energy calculation. Revert if transition rejected.
+        for neighbor in neighbors:
+            energy_difference += utils.calc_interaction(particle, neighbor, self.targets)
+        #TODO: Calculate the transition probability, considering local drive if exists.
