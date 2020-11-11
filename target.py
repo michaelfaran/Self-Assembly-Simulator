@@ -6,13 +6,13 @@ from exceptions import NonSquareParticlesNumber
 
 
 class Target(object):
-    def __init__(self, id, num_of_particles, weak_interaction, strong_interaction):
+    def __init__(self, id, num_of_particles, weak_interaction, strong_interaction, is_cyclic):
         self.id = id
-        self.adjacency_matrix = self.build_adjacency_matrix(num_of_particles)
+        self.adjacency_matrix = self.build_adjacency_matrix(num_of_particles, is_cyclic)
         self.weak_interaction = weak_interaction
         self.strong_interaction = strong_interaction
 
-    def build_adjacency_matrix(self, num_of_particles) -> np.ndarray:
+    def build_adjacency_matrix(self, num_of_particles, is_cyclic) -> np.ndarray:
         if num_of_particles != math.isqrt(num_of_particles) ** 2:
             raise NonSquareParticlesNumber()
         array_length = int(num_of_particles ** 0.5)
@@ -23,7 +23,7 @@ class Target(object):
 
         for x in range(array_length):
             for y in range(array_length):
-                neighbors = utils.get_neighboring_elements(particles, x, y)
+                neighbors = utils.get_neighboring_elements(particles, x, y, is_cyclic)
                 for direction, element in neighbors.items():
                     adjacency_matrix[particles[x][y], element] = 1
 

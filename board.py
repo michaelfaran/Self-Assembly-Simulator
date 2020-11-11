@@ -46,7 +46,8 @@ class Board:
                 targets.append(Target(id,
                                       self.cfg.num_of_particles,
                                       config.weak_interaction,
-                                      config.strong_interaction))
+                                      config.strong_interaction,
+                                      self.cfg.is_cyclic))
                 id += 1
         return targets
 
@@ -82,16 +83,22 @@ class Board:
         direction_delta = utils.neighbor_directions[direction]
 
         if not self.is_move_allowed(particle,
-                                    direction):  # TODO: take is_cyclic into consideration, maybe as board property from cfg.
+                                    direction, self.cfg.is_cyclic):
             return
 
-        new_x, new_y = particle.x + direction_delta[0], particle.y + direction_delta[1]
+        if self.cfg.is_cyclic:
+            new_x, new_y = (particle.x + direction_delta[0]) % self.cfg.length, (particle.y + direction_delta[1]) % self.cfg.length
+        else:
+            new_x, new_y = particle.x + direction_delta[0], particle.y + direction_delta[1]
+
         original_neighbors = [self.particles[neighbor_id] for neighbor_id
-                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y).values()]
+                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y, self.cfg.is_cyclic).values()]
+
         new_neighbors = [self.particles[neighbor_id] for neighbor_id
-                         in utils.get_neighboring_elements(self.grid, new_x, new_y).values()]  # TODO: is_cyclic also here
+                         in utils.get_neighboring_elements(self.grid, new_x, new_y, self.cfg.is_cyclic).values()]
 
         energy_difference = 0
+
         for neighbor in original_neighbors:
             energy_difference -= utils.calc_interaction(particle, neighbor, self.targets)
         for neighbor in new_neighbors:

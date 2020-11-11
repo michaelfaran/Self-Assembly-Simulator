@@ -11,4 +11,5 @@ class SimulationCfg(object):
     length: int
     num_of_particles: int
     targets_cfg: List[TargetCfg]
+    is_cyclic: bool
 
