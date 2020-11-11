@@ -47,7 +47,8 @@ class Board:
                                       self.cfg.num_of_particles,
                                       config.weak_interaction,
                                       config.strong_interaction,
-                                      self.cfg.is_cyclic))
+                                      self.cfg.is_cyclic,
+                                      config.local_drive))
                 id += 1
         return targets
 
@@ -71,8 +72,8 @@ class Board:
         particle = random.choice(self.particles)
         self.physical_move(particle)
         particle = random.choice(self.particles)
-        # self.state_change(particle)
-        # TODO: complete me
+        self.state_change(particle)
+        # TODO: Save data - energy, entropy, assembly times, etc.
 
     def physical_move(self, particle: Particle) -> None:
         """
@@ -132,18 +133,32 @@ class Board:
 
         return False
 
-    def state_change(self, particle: Particle, local_drive = False) -> None:
+    def state_change(self, particle: Particle) -> None:
         """
         Handles the inner state change attempt of a particle.
-        TODO: UNFINISHED
         """
         energy_difference = 0
+        original_state = particle.inner_state
         new_state = random.randrange(0, len(self.targets))
         neighbors = [self.particles[neighbor_id] for neighbor_id
-                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y).values()]
+                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y, self.cfg.is_cyclic).values()]
+        original_state_neighbors = 0
+        new_state_neighbors = 0
         for neighbor in neighbors:
             energy_difference -= utils.calc_interaction(particle, neighbor, self.targets)
-        particle.inner_state = new_state # Only for new energy calculation. Revert if transition rejected.
+            if neighbor.inner_state == original_state:
+                original_state_neighbors += 1
+            elif neighbor.inner_state == new_state:
+                new_state_neighbors += 1
+        particle.inner_state = new_state # Only for new energy calculation. Will be reverted if transition rejected.
         for neighbor in neighbors:
             energy_difference += utils.calc_interaction(particle, neighbor, self.targets)
-        #TODO: Calculate the transition probability, considering local drive if exists.
+
+        metropolis_factor = -energy_difference
+        if original_state_neighbors >= 2:
+            metropolis_factor -= self.targets[original_state].local_drive
+        if new_state_neighbors >= 2:
+            metropolis_factor += self.targets[new_state].local_drive
+
+        if not utils.metropolis(metropolis_factor):
+            particle.inner_state = original_state  # Changing the inner state back to original, in case of rejection.
