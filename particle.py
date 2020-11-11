@@ -1,11 +1,10 @@
 import random
-import constants
 from typing import List
 
 
 class Particle:
-    def __init__(self, particle_id: int):
+    def __init__(self, particle_id: int, inner_state: int):
         self.id = particle_id
-        self.x = None
-        self.y = None
-        self.inner_state = random.randrange(0, constants.m) #TODO: replace me with the cfg shit.
+        self.x = -1
+        self.y = -1
+        self.inner_state = inner_state
