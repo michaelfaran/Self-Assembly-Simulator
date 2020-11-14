@@ -17,9 +17,10 @@ class Board:
 
     def __init__(self, cfg):
         self.cfg = cfg
-        self.particles = [Particle(i) for i in range(cfg.num_of_particles)]
-        self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles)
         self.targets = self.initialize_targets()
+        self.particles = [Particle(i, random.randrange(0, len(self.targets))) for i in range(cfg.num_of_particles)]
+        self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles)
+
 
     def initialize_grid(self, length: int, num_of_particles: int):
         """
@@ -33,6 +34,7 @@ class Board:
         for i in range(num_of_particles):
             x, y = coordinates[i]
             grid[x][y] = i
+            self.particles[i].x, self.particles.y = x, y
         return grid
 
     def initialize_targets(self) -> List[Target]:
