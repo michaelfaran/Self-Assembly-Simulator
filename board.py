@@ -4,7 +4,7 @@ import numpy as np
 import random
 import utils
 from target import Target
-from typing import List, Union
+from typing import List, Union, Tuple
 from exceptions import TooManyParticlesError
 
 
@@ -14,13 +14,16 @@ class Board:
     grid: np.ndarray
     targets: List[Target]
 
-
-    def __init__(self, cfg):
+    def __init__(self, cfg, output_file):
+        self.output_file = output_file
         self.cfg = cfg
         self.targets = self.initialize_targets()
         self.particles = [Particle(i, random.randrange(0, len(self.targets))) for i in range(cfg.num_of_particles)]
         self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles)
-
+        self.adjacency_matrix = self.initizalize_adjacency_matrix()
+        self.hitting_times = [-1] * len(self.targets)
+        self.current_target = -1
+        self.time_in_target = -1
 
     def initialize_grid(self, length: int, num_of_particles: int):
         """
@@ -34,7 +37,7 @@ class Board:
         for i in range(num_of_particles):
             x, y = coordinates[i]
             grid[x][y] = i
-            self.particles[i].x, self.particles.y = x, y
+            self.particles[i].x, self.particles[i].y = x, y
         return grid
 
     def initialize_targets(self) -> List[Target]:
@@ -54,84 +57,106 @@ class Board:
                 id += 1
         return targets
 
-    def calculate_particle_energy(self, particle_id: int) -> Union[int, float]:
+    def initizalize_adjacency_matrix(self):
+        adjacency_matrix = np.zeros((self.cfg.num_of_particles, self.cfg.num_of_particles), tuple)
+
+        for x in range(self.cfg.length):
+            for y in range(self.cfg.length):
+                neighbors = utils.get_neighboring_elements(self.grid, (x, y), self.cfg.is_cyclic)
+                for direction, element in neighbors.items():
+                    adjacency_matrix[self.grid[x][y]][element] = str((self.particles[self.grid[x][y]].inner_state,
+                                                                  self.particles[element].inner_state))
+                adjacency_matrix[self.grid[x][y]][self.grid[x][y]] = str((self.particles[self.grid[x][y]].inner_state,
+                                                                         self.particles[self.grid[x][y]].inner_state))
+
+        return adjacency_matrix
+
+    def calculate_particle_energy(self, particle: Particle) -> Union[int, float]:
         """
-        Gets particle id, returns the current energy of the particle.
-        TODO: why do we need this?
+        Gets particle id, returns the current energy the particle adds to the system
+        (energy with it being there vs. no particle being there).
         """
-        p = self.particles[particle_id]
-        p_target = self.targets[p.inner_state]
+        p_target = self.targets[particle.inner_state]
         energy = 0
-        for direction, neighbor_id in utils.get_neighboring_elements(self.grid, p.x, p.y, is_cyclic=False):
-            n = self.particles[neighbor_id]
-            n_target = self.targets[n.inner_state]
-            energy += 0.5 * (p_target.get_energy(particle_id, neighbor_id) +
-                             n_target.get_energy(particle_id, neighbor_id))
+        for direction, neighbor_id in utils.get_neighboring_elements(self.grid, particle.get_coordinates()).items():
+            n_target = self.targets[self.particles[neighbor_id].inner_state]
+            energy += 0.5 * (p_target.get_energy(particle.id, neighbor_id) +
+                             n_target.get_energy(particle.id, neighbor_id))
 
         return energy
 
-    def turn(self):
+    def turn(self, turn_num):
         particle = random.choice(self.particles)
         self.physical_move(particle)
         particle = random.choice(self.particles)
         self.state_change(particle)
+
         # TODO: Save data - energy, entropy, assembly times, etc.
+        energy = sum((self.calculate_particle_energy(particle) for particle in self.particles)) / 2
+        distance_from_targets = self.calc_distance_from_targets()  # TODO think about a way
+
+        self.write_turn_to_file(turn_num, energy, distance_from_targets)
+        turn_target = distance_from_targets.index(0) if 0 in distance_from_targets else -1  # get the target with distance 0
+        if turn_target == self.current_target:
+            self.time_in_target += 1
+            return
+
+        if turn_target != -1 and self.hitting_times[turn_target] == -1:
+            self.hitting_times[turn_target] = turn_num
+
+
+
+        self.current_target = turn_target
+        self.time_in_target = 0
+
+    def run_simulation(self, num_of_turns):
+        for i in range(1, num_of_turns + 1):
+            self.turn(i)
+
+        print(self.hitting_times)
 
     def physical_move(self, particle: Particle) -> None:
         """
         Gets particle, and attempting to make a physical move according to
         energy difference metropolis query.
         """
-        direction = random.choice(utils.neighbor_directions.values())
+        direction = random.choice(list(utils.neighbor_directions.keys()))
         direction_delta = utils.neighbor_directions[direction]
+        new_coordinates = utils.add_coordinates(particle.get_coordinates(),
+                                                direction_delta,
+                                                self.cfg.is_cyclic,
+                                                self.cfg.length)
 
-        if not self.is_move_allowed(particle,
-                                    direction, self.cfg.is_cyclic):
+        if not self.is_move_allowed(new_coordinates):
             return
 
-        if self.cfg.is_cyclic:
-            new_x, new_y = (particle.x + direction_delta[0]) % self.cfg.length, (particle.y + direction_delta[1]) % self.cfg.length
-        else:
-            new_x, new_y = particle.x + direction_delta[0], particle.y + direction_delta[1]
+        old_energy = self.calculate_particle_energy(particle)
+        old_coordinates = particle.get_coordinates()
 
-        original_neighbors = [self.particles[neighbor_id] for neighbor_id
-                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y, self.cfg.is_cyclic).values()]
+        # move particle and recalculate energy
+        self.do_move_particle(particle, new_coordinates)
+        new_energy = self.calculate_particle_energy(particle)
+        new_neighbors = utils.get_neighboring_elements(self.grid, new_coordinates, self.cfg.is_cyclic)
+        # if the move is accepted, we keep it
+        if utils.metropolis(-(new_energy - old_energy)):
+            # update adjacency matrix
+            self.adjacency_matrix[:][particle.id] = self.adjacency_matrix[particle.id][:] = 0
+            self.adjacency_matrix[particle.id][particle.id] = str((particle.inner_state, particle.inner_state))
+            for n in new_neighbors.values():
+                self.adjacency_matrix[particle.id][n] = str((particle.inner_state, self.particles[n].inner_state))
+            return
 
-        new_neighbors = [self.particles[neighbor_id] for neighbor_id
-                         in utils.get_neighboring_elements(self.grid, new_x, new_y, self.cfg.is_cyclic).values()]
-
-        energy_difference = 0
-
-        for neighbor in original_neighbors:
-            energy_difference -= utils.calc_interaction(particle, neighbor, self.targets)
-        for neighbor in new_neighbors:
-            energy_difference += utils.calc_interaction(particle, neighbor, self.targets)
-
-        if utils.metropolis(-energy_difference):
-            self.grid[particle.x][particle.y] = -1
-            self.grid[new_x][new_y] = particle.id
-            particle.x = new_x
-            particle.y = new_y
+        # if the move is rejected, we revert it
+        self.do_move_particle(particle, old_coordinates)
         return
 
-
-
-
-    def is_move_allowed(self, particle: Particle, direction: str, is_cyclic=False) -> bool:
+    def is_move_allowed(self, new_coordinates: Tuple[int]) -> bool:
         """
         Gets particle and movement direction (up/down/left/right) and cyclicity, and decides
         if the move is allowed (bounds & occupation considerations).
         """
-        delta = utils.neighbor_directions[direction]
-        length = self.grid.shape[0]  # Assuming square grid.
-
-        if is_cyclic:
-            new_coordinates = ((particle.x + delta[0]) % length, (particle.y + delta[1]) % length)
-        else:
-            new_coordinates = (particle.x + delta[0], particle.y + delta[1])
-
-        if utils.is_coordinates_in_bounds(new_coordinates, length, length):
-            return self.grid[new_coordinates[0]][new_coordinates[1]] == -1
+        if utils.is_coordinates_in_bounds(new_coordinates, self.cfg.length, self.cfg.length):
+            return -1 == self.grid[new_coordinates[0]][new_coordinates[1]]
 
         return False
 
@@ -139,28 +164,49 @@ class Board:
         """
         Handles the inner state change attempt of a particle.
         """
-        energy_difference = 0
+        old_energy = self.calculate_particle_energy(particle)
         original_state = particle.inner_state
+
+        # pick a new state and calc energy in new state
         new_state = random.randrange(0, len(self.targets))
-        neighbors = [self.particles[neighbor_id] for neighbor_id
-                              in utils.get_neighboring_elements(self.grid, particle.x, particle.y, self.cfg.is_cyclic).values()]
-        original_state_neighbors = 0
-        new_state_neighbors = 0
-        for neighbor in neighbors:
-            energy_difference -= utils.calc_interaction(particle, neighbor, self.targets)
-            if neighbor.inner_state == original_state:
-                original_state_neighbors += 1
-            elif neighbor.inner_state == new_state:
-                new_state_neighbors += 1
-        particle.inner_state = new_state # Only for new energy calculation. Will be reverted if transition rejected.
-        for neighbor in neighbors:
-            energy_difference += utils.calc_interaction(particle, neighbor, self.targets)
+        particle.inner_state = new_state
+        new_energy = self.calculate_particle_energy(particle)
 
-        metropolis_factor = -energy_difference
-        if original_state_neighbors >= 2:
-            metropolis_factor -= self.targets[original_state].local_drive
-        if new_state_neighbors >= 2:
-            metropolis_factor += self.targets[new_state].local_drive
+        # calculate local drive
+        neighbors = utils.get_neighboring_elements(self.grid, particle.get_coordinates(), self.cfg.is_cyclic)
+        num_of_neighbors_in_original_state = len([n for n in neighbors.values()
+                                                  if self.particles[n].inner_state == original_state])
+        num_of_neighbors_in_new_state = len([n for n in neighbors.values()
+                                             if self.particles[n].inner_state == new_state])
+        local_drive = 0
 
-        if not utils.metropolis(metropolis_factor):
-            particle.inner_state = original_state  # Changing the inner state back to original, in case of rejection.
+        if num_of_neighbors_in_original_state >= 2:
+            local_drive -= self.targets[original_state].local_drive
+        if num_of_neighbors_in_new_state >= 2:
+            local_drive += self.targets[new_state].local_drive
+
+        # Check change probabilty and edit adjacency_matrix.
+        if utils.metropolis(-(new_energy - old_energy) + local_drive):
+            for n in neighbors.values():
+                self.adjacency_matrix[particle.id][n] = str((new_state, self.particles[n].inner_state))
+            self.adjacency_matrix[particle.id][particle.id] = str((new_state, new_state))
+            return
+
+        # if change rejected, revert state
+        particle.inner_state = original_state
+        return
+
+    def do_move_particle(self, particle, destination_coordinates):
+        self.grid[particle.x][particle.y] = -1  # no particle
+        self.grid[destination_coordinates[0]][destination_coordinates[1]] = particle.id  # move particle on grid
+        particle.x, particle.y = destination_coordinates[0], destination_coordinates[1]  # update particle coordinates
+
+    def write_turn_to_file(self, turn_num, energy, distances_from_target):
+        line_to_write = f"{turn_num}, {str(energy)}, "
+        line_to_write += str.join(", ", (str(d) for d in distances_from_target))
+        self.output_file.write(f"{line_to_write}\n")
+        print(turn_num)
+
+    def calc_distance_from_targets(self):
+        return [np.count_nonzero(~np.logical_and(self.adjacency_matrix == str((i.id, i.id)), i.adjacency_matrix == 1))
+                for i in self.targets]
