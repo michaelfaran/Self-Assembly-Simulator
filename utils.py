@@ -4,6 +4,8 @@ import math
 from typing import Union, Tuple, List
 from particle import Particle
 from target import Target
+from copy import copy
+import matplotlib.pyplot as plt
 
 neighbor_directions = {"right": (0, 1),
                        "left": (0, -1),
@@ -54,3 +56,31 @@ def add_coordinates(original: Tuple[int], delta: Tuple[int], is_cyclic=False, le
         return new
 
     raise IndexError #if coordinate not in bounds
+
+def show_grid(grid: np.ndarray, particles: List[Particle],
+              save_fig: bool = False, filename: str = "fig.png",
+              title: str = "Simulation Snapshot"):
+    palette=copy(plt.get_cmap("tab20"))
+    palette.set_under('white',1.0)
+    fig, ax = plt.subplots()
+    ax.imshow(grid, cmap=palette, vmin=0)
+    ax.set_xticks(np.arange(0,grid.shape[0],1))
+    ax.set_yticks(np.arange(0,grid.shape[1],1))
+    ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
+    ax.set_yticklabels(np.arange(0, grid.shape[1], 1))
+    ax.set_xticks(np.arange(-.5, grid.shape[0], 1), minor=True)
+    ax.set_yticks(np.arange(-.5, grid.shape[1], 1), minor=True)
+    ax.grid(which='minor', color='black', linestyle='-', linewidth=2)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if(grid[x][y]!=-1):
+                id=grid[x][y]
+                print(f"x: {x} y: {y} id: {id}")
+                inner_state=particles[id].inner_state
+                lbl=f"ID: {id}\nIN: {inner_state}"
+                ax.text(y,x,lbl,va="center",ha="center")
+    plt.title(title)
+    if save_fig:
+        plt.savefig(filename)
+    plt.show()
+
