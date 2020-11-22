@@ -31,8 +31,8 @@ def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int], is_cycl
     neighboring_elements = {}
 
     for direction, delta in neighbor_directions.items():
-        neighbor_coordinates = add_coordinates(coordinates, delta, is_cyclic, array.shape[0])
         try:
+            neighbor_coordinates = add_coordinates(coordinates, delta, is_cyclic, array.shape[0])
             if array[neighbor_coordinates[0]][neighbor_coordinates[1]] != -1:
                 neighboring_elements[direction] = array[neighbor_coordinates[0]][neighbor_coordinates[1]]
         except IndexError:
@@ -41,13 +41,16 @@ def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int], is_cycl
     return neighboring_elements
 
 
-#TODO: why we need this? isn't the try-excpet above enough?
 def is_coordinates_in_bounds(coordinates: tuple, x_dimension: int, y_dimension: int):
     return 0 <= coordinates[0] < x_dimension and 0 <= coordinates[1] < y_dimension
 
 
-def add_coordinates(original: Tuple[int], delta: Tuple[int], is_cyclic=False, length=1):
+def add_coordinates(original: Tuple[int], delta: Tuple[int], is_cyclic=False, length=math.inf):
+    new = original[0] + delta[0], original[1] + delta[1]
     if is_cyclic:
-        return (original[0] + delta[0]) % length, (original[1] + delta[1]) % length
+        return new[0] % length, new[1] % length
 
-    return original[0] + delta[0], original[1] + delta[1]
+    if is_coordinates_in_bounds(new, length, length):
+        return new
+
+    raise IndexError #if coordinate not in bounds

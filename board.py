@@ -24,6 +24,7 @@ class Board:
         self.hitting_times = [-1] * len(self.targets)
         self.current_target = -1
         self.time_in_target = -1
+        self.time_in_targets = []
 
     def initialize_grid(self, length: int, num_of_particles: int):
         """
@@ -52,7 +53,6 @@ class Board:
                                       self.cfg.num_of_particles,
                                       config.weak_interaction,
                                       config.strong_interaction,
-                                      self.cfg.is_cyclic,
                                       config.local_drive))
                 id += 1
         return targets
@@ -62,6 +62,8 @@ class Board:
 
         for x in range(self.cfg.length):
             for y in range(self.cfg.length):
+                if -1 == self.grid[x][y]: #if no particle there.
+                    continue
                 neighbors = utils.get_neighboring_elements(self.grid, (x, y), self.cfg.is_cyclic)
                 for direction, element in neighbors.items():
                     adjacency_matrix[self.grid[x][y]][element] = str((self.particles[self.grid[x][y]].inner_state,
@@ -102,11 +104,11 @@ class Board:
             return
 
         if turn_target != -1 and self.hitting_times[turn_target] == -1:
-            self.hitting_times[turn_target] = turn_num
-
+            self.hitting_times[turn_target] = [turn_num]
 
 
         self.current_target = turn_target
+        self.time_in_targets.append((turn_num, self.time_in_target))
         self.time_in_target = 0
 
     def run_simulation(self, num_of_turns):
@@ -114,6 +116,7 @@ class Board:
             self.turn(i)
 
         print(self.hitting_times)
+        print(self.time_in_targets)
 
     def physical_move(self, particle: Particle) -> None:
         """
@@ -208,5 +211,11 @@ class Board:
         print(turn_num)
 
     def calc_distance_from_targets(self):
-        return [np.count_nonzero(~np.logical_and(self.adjacency_matrix == str((i.id, i.id)), i.adjacency_matrix == 1))
-                for i in self.targets]
+        distances = []
+        for i in self.targets:
+            matching_adjacnet = np.logical_and(self.adjacency_matrix == str((i.id, i.id)), i.adjacency_matrix == 1)
+            matching_vacancy = np.logical_and(self.adjacency_matrix == 0, i.adjacency_matrix == 0)
+            b = ~np.logical_or(matching_adjacnet, matching_vacancy)
+            distances.append(np.count_nonzero(~np.logical_or(matching_adjacnet, matching_vacancy)))
+
+        return distances
