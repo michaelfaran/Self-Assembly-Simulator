@@ -5,6 +5,7 @@ class TargetCfg(object):
     weak_interaction: int
     strong_interaction: int
     num_of_instances: int
+    local_drive: int
 
 
 class SimulationCfg(object):

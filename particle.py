@@ -1,5 +1,4 @@
-import random
-from typing import List
+from typing import Tuple
 
 
 class Particle:
@@ -8,3 +7,6 @@ class Particle:
         self.x = -1
         self.y = -1
         self.inner_state = inner_state
+
+    def get_coordinates(self) -> Tuple[int]:
+        return self.x, self.y
