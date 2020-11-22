@@ -6,6 +6,7 @@ from particle import Particle
 from target import Target
 from copy import copy
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 neighbor_directions = {"right": (0, 1),
                        "left": (0, -1),
@@ -57,13 +58,19 @@ def add_coordinates(original: Tuple[int], delta: Tuple[int], is_cyclic=False, le
 
     raise IndexError #if coordinate not in bounds
 
-def show_grid(grid: np.ndarray, particles: List[Particle],
+def show_grid(grid: np.ndarray, particles: List[Particle],inner_states_number: int,
               save_fig: bool = False, filename: str = "fig.png",
               title: str = "Simulation Snapshot"):
-    palette=copy(plt.get_cmap("tab20"))
+    palette=copy(plt.get_cmap("tab20",inner_states_number))
     palette.set_under('white',1.0)
+
+    inner_states_matrix = np.full((grid.shape[0], grid.shape[1]), -1, int)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                inner_states_matrix[x][y] = particles[grid[x][y]].inner_state
     fig, ax = plt.subplots()
-    ax.imshow(grid, cmap=palette, vmin=0)
+    plot = ax.imshow(inner_states_matrix, cmap=palette, vmin=-0.5, vmax=inner_states_number-0.5)
     ax.set_xticks(np.arange(0,grid.shape[0],1))
     ax.set_yticks(np.arange(0,grid.shape[1],1))
     ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
@@ -75,11 +82,13 @@ def show_grid(grid: np.ndarray, particles: List[Particle],
         for y in range(grid.shape[1]):
             if(grid[x][y]!=-1):
                 id=grid[x][y]
-                print(f"x: {x} y: {y} id: {id}")
                 inner_state=particles[id].inner_state
-                lbl=f"ID: {id}\nIN: {inner_state}"
-                ax.text(y,x,lbl,va="center",ha="center")
+                print(f"x: {x} y: {y} id: {id} state: {inner_state}")
+                lbl=f"{id}"
+                ax.text(y,x,lbl,va="center",ha="center",fontweight="bold")
     plt.title(title)
+    #fig.colorbar(plot)
+    cax=plt.colorbar(plot,ticks=np.arange(0,inner_states_number))
     if save_fig:
         plt.savefig(filename)
     plt.show()
