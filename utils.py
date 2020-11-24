@@ -25,7 +25,7 @@ def metropolis(r: Union[float, int]) -> bool:
         return np.random.binomial(1, p, 1) == 1
 
 
-def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int], is_cyclic: bool=False,) -> dict:
+def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int, int], is_cyclic: bool=False,) -> dict:
     """
     Gets matrix of elements, and returns dictionary
     of the neighbors elements of a given index.
@@ -48,7 +48,7 @@ def is_coordinates_in_bounds(coordinates: tuple, x_dimension: int, y_dimension: 
     return 0 <= coordinates[0] < x_dimension and 0 <= coordinates[1] < y_dimension
 
 
-def add_coordinates(original: Tuple[int], delta: Tuple[int], is_cyclic=False, length=math.inf):
+def add_coordinates(original: Tuple[int, int], delta: Tuple[int, int], length: int, is_cyclic=False):
     new = original[0] + delta[0], original[1] + delta[1]
     if is_cyclic:
         return new[0] % length, new[1] % length

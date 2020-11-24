@@ -8,5 +8,5 @@ class Particle:
         self.y = -1
         self.inner_state = inner_state
 
-    def get_coordinates(self) -> Tuple[int]:
+    def get_coordinates(self) -> Tuple[int, int]:
         return self.x, self.y

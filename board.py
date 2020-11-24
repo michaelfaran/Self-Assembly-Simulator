@@ -127,8 +127,9 @@ class Board:
         direction_delta = utils.neighbor_directions[direction]
         new_coordinates = utils.add_coordinates(particle.get_coordinates(),
                                                 direction_delta,
-                                                self.cfg.is_cyclic,
-                                                self.cfg.length)
+                                                self.cfg.length,
+                                                self.cfg.is_cyclic
+                                                )
 
         if not self.is_move_allowed(new_coordinates):
             return
