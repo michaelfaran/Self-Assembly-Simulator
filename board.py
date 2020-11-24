@@ -104,7 +104,7 @@ class Board:
             return
 
         if turn_target != -1 and self.hitting_times[turn_target] == -1:
-            self.hitting_times[turn_target] = [turn_num]
+            self.hitting_times[turn_target] = turn_num
 
 
         self.current_target = turn_target
