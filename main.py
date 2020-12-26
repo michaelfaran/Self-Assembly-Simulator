@@ -97,8 +97,8 @@ def new_turn_callback(board, turn_num):
     distance_from_targets = board.calc_distance_from_targets()
     print("\rturn {}".format(turn_num), end='')
     if not turn_num % (10 ** COUNTER):
+        print('\r 10 ^ {}'.format(COUNTER))
         COUNTER += 1
-        print('\n', end='')
 
     turn_target = distance_from_targets.index(0) if 0 in distance_from_targets else -1  # get the target with distance 0
 
