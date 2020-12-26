@@ -14,19 +14,19 @@ class Board:
     grid: np.ndarray
     targets: List[Target]
 
-    def __init__(self, cfg, output_file):
+    def __init__(self, cfg, output_file, start_at_target=False):
         self.output_file = output_file
         self.cfg = cfg
         self.targets = self.initialize_targets()
         self.particles = [Particle(i, random.randrange(0, len(self.targets))) for i in range(cfg.num_of_particles)]
-        self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles)
+        self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles, start_at_target)
         self.adjacency_matrix = self.initizalize_adjacency_matrix()
         self.hitting_times = [-1] * len(self.targets)
         self.current_target = -1
         self.time_in_target = -1
-        self.time_in_targets = []
+        self.time_in_targets = 0
 
-    def initialize_grid(self, length: int, num_of_particles: int):
+    def initialize_grid(self, length: int, num_of_particles: int, start_at_target):
         """
         Initializes grid.
         Gets list of particles, and randomly populates them in the grid.
@@ -34,7 +34,12 @@ class Board:
         """
         grid = np.full((length, length), -1, int)  # Particle slots, -1 represents no particle
         coordinates = [(i, j) for i in range(length) for j in range(length)]  # Coordinates set
-        random.shuffle(coordinates)
+
+        if start_at_target is False:
+            random.shuffle(coordinates)
+        else:
+            self.set_particles_at_target(coordinates, start_at_target)
+
         for i in range(num_of_particles):
             x, y = coordinates[i]
             grid[x][y] = i
@@ -87,36 +92,22 @@ class Board:
 
         return energy
 
-    def turn(self, turn_num):
+    def turn(self, turn_num, turn_callback):
         particle = random.choice(self.particles)
         self.physical_move(particle)
         particle = random.choice(self.particles)
         self.state_change(particle)
 
         # TODO: Save data - energy, entropy, assembly times, etc.
-        energy = sum((self.calculate_particle_energy(particle) for particle in self.particles)) / 2
-        distance_from_targets = self.calc_distance_from_targets()  # TODO think about a way
+        return turn_callback(self, turn_num)
 
-        self.write_turn_to_file(turn_num, energy, distance_from_targets)
-        turn_target = distance_from_targets.index(0) if 0 in distance_from_targets else -1  # get the target with distance 0
-        if turn_target == self.current_target:
-            self.time_in_target += 1
-            return
-
-        if turn_target != -1 and self.hitting_times[turn_target] == -1:
-            self.hitting_times[turn_target] = turn_num
-
-
-        self.current_target = turn_target
-        self.time_in_targets.append((turn_num, self.time_in_target))
-        self.time_in_target = 0
-
-    def run_simulation(self, num_of_turns):
+    def run_simulation(self, num_of_turns, turn_callback):
         for i in range(1, num_of_turns + 1):
-            self.turn(i)
+            if not self.turn(i, turn_callback):
+                #if the callback says we should stop
+                break
 
-        print(self.hitting_times)
-        print(self.time_in_targets)
+        self.output_file.write("time in target: {}\n".format(self.time_in_targets))
 
     def physical_move(self, particle: Particle) -> None:
         """
@@ -205,11 +196,6 @@ class Board:
         self.grid[destination_coordinates[0]][destination_coordinates[1]] = particle.id  # move particle on grid
         particle.x, particle.y = destination_coordinates[0], destination_coordinates[1]  # update particle coordinates
 
-    def write_turn_to_file(self, turn_num, energy, distances_from_target):
-        line_to_write = f"{turn_num}, {str(energy)}, "
-        line_to_write += str.join(", ", (str(d) for d in distances_from_target))
-        self.output_file.write(f"{line_to_write}\n")
-        print(turn_num)
 
     def calc_distance_from_targets(self):
         distances = []
@@ -220,3 +206,14 @@ class Board:
             distances.append(np.count_nonzero(~np.logical_or(matching_adjacnet, matching_vacancy)))
 
         return distances
+
+    def set_particles_at_target(self, coordinates, target_num):
+        target_grid = self.targets[target_num].particles_grid
+        particles_array_length = int(self.cfg.num_of_particles ** 0.5)
+
+        for i in range(particles_array_length):
+            for j in range(particles_array_length):
+                coordinates[target_grid[i][j]] = (i, j)
+
+
+

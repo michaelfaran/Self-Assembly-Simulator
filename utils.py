@@ -35,7 +35,7 @@ def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int, int], is
 
     for direction, delta in neighbor_directions.items():
         try:
-            neighbor_coordinates = add_coordinates(coordinates, delta, is_cyclic, array.shape[0])
+            neighbor_coordinates = add_coordinates(coordinates, delta,array.shape[0], is_cyclic)
             if array[neighbor_coordinates[0]][neighbor_coordinates[1]] != -1:
                 neighboring_elements[direction] = array[neighbor_coordinates[0]][neighbor_coordinates[1]]
         except IndexError:
