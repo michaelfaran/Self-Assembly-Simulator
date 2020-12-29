@@ -42,7 +42,7 @@ def main():
     cfg.is_cyclic = True
     cfg.targets_cfg = [target1]
     global_result = []
-    runs = [-3, -3.5, -4, -4.5, -5, -5.5, -6]
+    runs = [-5]
 
     startTime = datetime.now()
 
@@ -50,7 +50,7 @@ def main():
         for run in runs:
             outfile.write("begining run with strong interaction = {}------\n".format(run))
             target1.strong_interaction = run
-            for i in range(10):
+            for i in range(1):
                 COUNTER = 0
                 print("begining run {} with interaction {}".format(i, run))
                 board = Board(cfg, outfile, 0)
