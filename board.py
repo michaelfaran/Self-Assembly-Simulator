@@ -108,6 +108,7 @@ class Board:
                 break
 
         self.output_file.write("time in target: {}\n".format(self.time_in_targets))
+        print("time in target: {}\n".format(self.time_in_targets))
 
     def physical_move(self, particle: Particle) -> None:
         """

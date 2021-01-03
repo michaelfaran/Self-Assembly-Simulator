@@ -34,7 +34,7 @@ def main():
     target1 = TargetCfg()
     target1.strong_interaction = -1.5
     target1.weak_interaction = -1
-    target1.num_of_instances = 1
+    target1.num_of_instances = 2
     target1.local_drive = 0
     cfg = SimulationCfg()
     cfg.length = 15
@@ -42,7 +42,7 @@ def main():
     cfg.is_cyclic = True
     cfg.targets_cfg = [target1]
     global_result = []
-    runs = [-3, -3.5, -4, -4.5, -5, -5.5, -6]
+    runs = [-6.5, -7, -7.5, -8, -8.5]
 
     startTime = datetime.now()
 
@@ -50,11 +50,11 @@ def main():
         for run in runs:
             outfile.write("begining run with strong interaction = {}------\n".format(run))
             target1.strong_interaction = run
-            for i in range(10):
+            for i in range(2):
                 COUNTER = 0
                 print("begining run {} with interaction {}".format(i, run))
                 board = Board(cfg, outfile, 0)
-                board.run_simulation(5 * (10**7), new_turn_callback)
+                board.run_simulation(5 * (10**2), new2_turn_callback)
                 print('\nend run--------------')
 
 
@@ -92,7 +92,7 @@ def original_turn_callback(board, turn_num):
 
     return True
 
-def new_turn_callback(board, turn_num):
+def new2_turn_callback(board, turn_num):
     global COUNTER
     distance_from_targets = board.calc_distance_from_targets()
     print("\rturn {}".format(turn_num), end='')
@@ -105,7 +105,7 @@ def new_turn_callback(board, turn_num):
     if turn_target == -1:
         board.time_in_target = 0
 
-    elif turn_target == board.current_target:
+    elif turn_target == 0:
         board.time_in_target += 1
         board.time_in_targets += 1
 
