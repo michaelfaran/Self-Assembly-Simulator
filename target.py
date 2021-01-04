@@ -18,14 +18,15 @@ class Target(object):
         num_of_particles = particles.size
         array_length = particles.shape[0]
         adjacency_matrix = np.zeros((num_of_particles, num_of_particles), int)
+        adjacency_matrix[:] = -1
 
         for x in range(array_length):
             for y in range(array_length):
                 neighbors = utils.get_neighboring_elements(particles, (x, y), is_cyclic=False)
                 for direction, element in neighbors.items():
-                    adjacency_matrix[particles[x][y]][element] = 1
+                    adjacency_matrix[particles[x][y]][element] = self.id * 11
 
-                adjacency_matrix[particles[x][y]][particles[x][y]] = 1
+                adjacency_matrix[particles[x][y]][particles[x][y]] = self.id * 11
 
         return adjacency_matrix
 
@@ -44,5 +45,8 @@ class Target(object):
         TODO: consider renaming to get_interaction, to not confuse with the calculate_energy
               function of Board. Even tough the board function may be erased.
         """
-        return self.strong_interaction * self.adjacency_matrix[p1][p2] + \
-               self.weak_interaction * (1 - self.adjacency_matrix[p1][p2])
+        indicator = 1 if self.are_neighboors_in_target(p1, p2) else 0
+        return self.strong_interaction * indicator + self.weak_interaction * (1 - indicator)
+
+    def are_neighboors_in_target(self, p1, p2):
+        return 1 if self.adjacency_matrix[p1][p2] != -1 else 0

@@ -18,7 +18,7 @@ class Board:
         self.output_file = output_file
         self.cfg = cfg
         self.targets = self.initialize_targets()
-        self.particles = [Particle(i, random.randrange(0, len(self.targets))) for i in range(cfg.num_of_particles)]
+        self.particles = self.initialize_particles_list(start_at_target)
         self.grid = self.initialize_grid(cfg.length, cfg.num_of_particles, start_at_target)
         self.adjacency_matrix = self.initizalize_adjacency_matrix()
         self.hitting_times = [-1] * len(self.targets)
@@ -46,6 +46,12 @@ class Board:
             self.particles[i].x, self.particles[i].y = x, y
         return grid
 
+    def initialize_particles_list(self, start_at_target):
+        if start_at_target is False:
+            return [Particle(i, random.randrange(0, len(self.targets))) for i in range(self.cfg.num_of_particles)]
+
+        return [Particle(i, start_at_target) for i in range(self.cfg.num_of_particles)]
+
     def initialize_targets(self) -> List[Target]:
         """
         Returns list of randomly built targets
@@ -63,7 +69,8 @@ class Board:
         return targets
 
     def initizalize_adjacency_matrix(self):
-        adjacency_matrix = np.zeros((self.cfg.num_of_particles, self.cfg.num_of_particles), tuple)
+        adjacency_matrix = np.zeros((self.cfg.num_of_particles, self.cfg.num_of_particles), int)
+        adjacency_matrix[:] = -1
 
         for x in range(self.cfg.length):
             for y in range(self.cfg.length):
@@ -71,10 +78,10 @@ class Board:
                     continue
                 neighbors = utils.get_neighboring_elements(self.grid, (x, y), self.cfg.is_cyclic)
                 for direction, element in neighbors.items():
-                    adjacency_matrix[self.grid[x][y]][element] = str((self.particles[self.grid[x][y]].inner_state,
-                                                                  self.particles[element].inner_state))
-                adjacency_matrix[self.grid[x][y]][self.grid[x][y]] = str((self.particles[self.grid[x][y]].inner_state,
-                                                                         self.particles[self.grid[x][y]].inner_state))
+                    adjacency_matrix[self.grid[x][y]][element] = 10 * self.particles[self.grid[x][y]].inner_state\
+                                                                 + self.particles[element].inner_state
+                adjacency_matrix[self.grid[x][y]][self.grid[x][y]] = 10 * self.particles[self.grid[x][y]].inner_state\
+                                                                     + self.particles[self.grid[x][y]].inner_state
 
         return adjacency_matrix
 
@@ -136,10 +143,10 @@ class Board:
         # if the move is accepted, we keep it
         if utils.metropolis(-(new_energy - old_energy)):
             # update adjacency matrix
-            self.adjacency_matrix[:][particle.id] = self.adjacency_matrix[particle.id][:] = 0
-            self.adjacency_matrix[particle.id][particle.id] = str((particle.inner_state, particle.inner_state))
+            self.adjacency_matrix[:][particle.id] = self.adjacency_matrix[particle.id][:] = -1
+            self.adjacency_matrix[particle.id][particle.id] = 10 * particle.inner_state + particle.inner_state
             for n in new_neighbors.values():
-                self.adjacency_matrix[particle.id][n] = str((particle.inner_state, self.particles[n].inner_state))
+                self.adjacency_matrix[particle.id][n] = 10 * particle.inner_state + self.particles[n].inner_state
             return
 
         # if the move is rejected, we revert it
@@ -184,8 +191,8 @@ class Board:
         # Check change probabilty and edit adjacency_matrix.
         if utils.metropolis(-(new_energy - old_energy) + local_drive):
             for n in neighbors.values():
-                self.adjacency_matrix[particle.id][n] = str((new_state, self.particles[n].inner_state))
-            self.adjacency_matrix[particle.id][particle.id] = str((new_state, new_state))
+                self.adjacency_matrix[particle.id][n] = 10 * new_state + self.particles[n].inner_state
+            self.adjacency_matrix[particle.id][particle.id] = 10 * new_state + new_state
             return
 
         # if change rejected, revert state
@@ -201,10 +208,7 @@ class Board:
     def calc_distance_from_targets(self):
         distances = []
         for i in self.targets:
-            matching_adjacnet = np.logical_and(self.adjacency_matrix == str((i.id, i.id)), i.adjacency_matrix == 1)
-            matching_vacancy = np.logical_and(self.adjacency_matrix == 0, i.adjacency_matrix == 0)
-            b = ~np.logical_or(matching_adjacnet, matching_vacancy)
-            distances.append(np.count_nonzero(~np.logical_or(matching_adjacnet, matching_vacancy)))
+            distances.append(np.count_nonzero(self.adjacency_matrix != i.adjacency_matrix))
 
         return distances
 

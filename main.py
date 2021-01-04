@@ -34,7 +34,7 @@ def main():
     target1 = TargetCfg()
     target1.strong_interaction = -1.5
     target1.weak_interaction = -1
-    target1.num_of_instances = 2
+    target1.num_of_instances = 1
     target1.local_drive = 0
     cfg = SimulationCfg()
     cfg.length = 15
@@ -54,7 +54,9 @@ def main():
                 COUNTER = 0
                 print("begining run {} with interaction {}".format(i, run))
                 board = Board(cfg, outfile, 0)
-                board.run_simulation(5 * (10**2), new2_turn_callback)
+                board.run_simulation(5 * (10**4
+
+                                          ), new2_turn_callback)
                 print('\nend run--------------')
 
 
@@ -112,9 +114,6 @@ def new2_turn_callback(board, turn_num):
     else:
         board.current_target = turn_target
         board.time_in_target = 1
-        board.time_in_targets += 1
-
-
 
     return True
 
