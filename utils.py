@@ -83,7 +83,7 @@ def show_grid(grid: np.ndarray, particles: List[Particle],inner_states_number: i
             if(grid[x][y]!=-1):
                 id=grid[x][y]
                 inner_state=particles[id].inner_state
-                print(f"x: {x} y: {y} id: {id} state: {inner_state}")
+                #print(f"x: {x} y: {y} id: {id} state: {inner_state}")
                 lbl=f"{id}"
                 ax.text(y,x,lbl,va="center",ha="center",fontweight="bold")
     plt.title(title)
@@ -91,5 +91,9 @@ def show_grid(grid: np.ndarray, particles: List[Particle],inner_states_number: i
     cax=plt.colorbar(plot,ticks=np.arange(0,inner_states_number))
     if save_fig:
         plt.savefig(filename)
-    plt.show()
+    #plt.show()
 
+def save_distance_figure(name, arr):
+    plt.clf()
+    plt.plot(arr)
+    plt.savefig(f"{name}.png")
