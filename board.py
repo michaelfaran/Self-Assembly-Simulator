@@ -109,13 +109,15 @@ class Board:
         return turn_callback(self, turn_num)
 
     def run_simulation(self, num_of_turns, turn_callback):
-        for i in range(1, num_of_turns + 1):
-            if not self.turn(i, turn_callback):
+        turn_num=1
+        while(turn_num<num_of_turns+1):
+            if not self.turn(turn_num, turn_callback):
                 #if the callback says we should stop
                 break
+            turn_num+=1
 
-        self.output_file.write("time in target: {}\n".format(self.time_in_targets))
-        print("time in target: {}\n".format(self.time_in_targets))
+        self.output_file.write("tfas: {}\n".format(turn_num))
+        print("tfas: {}\n".format(turn_num))
 
     def physical_move(self, particle: Particle) -> None:
         """

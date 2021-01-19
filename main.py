@@ -8,7 +8,7 @@ from utils import metropolis
 CFG_FILE = "cfg.json"
 from datetime import datetime
 COUNTER = 0
-
+MIN_DISTANCE = 1000
 
 def load_cfg(cfg_file: IO) -> dict:
     cfg = json.loads(cfg_file)
@@ -31,6 +31,7 @@ def main2():
 
 def main():
     global COUNTER
+    global MIN_DISTANCE
     target1 = TargetCfg()
     target1.strong_interaction = -1.5
     target1.weak_interaction = -1
@@ -42,7 +43,7 @@ def main():
     cfg.is_cyclic = True
     cfg.targets_cfg = [target1]
     global_result = []
-    runs = [-6.5, -7, -7.5, -8, -8.5]
+    runs = [-5]
 
     startTime = datetime.now()
 
@@ -52,11 +53,12 @@ def main():
             target1.strong_interaction = run
             for i in range(2):
                 COUNTER = 0
+                MIN_DISTANCE=1000
                 print("begining run {} with interaction {}".format(i, run))
-                board = Board(cfg, outfile, 0)
-                board.run_simulation(5 * (10**4
+                board = Board(cfg, outfile, False)  # Random initialization for TFAS measurements
+                board.run_simulation(5 * (10**7
 
-                                          ), new2_turn_callback)
+                                          ), tfas_turn_callback)
                 print('\nend run--------------')
 
 
@@ -116,6 +118,17 @@ def new2_turn_callback(board, turn_num):
         board.time_in_target = 1
 
     return True
+
+
+def tfas_turn_callback(board, turn_num):
+    global MIN_DISTANCE
+    distance_from_targets = board.calc_distance_from_targets()
+    if min(distance_from_targets) < MIN_DISTANCE:
+        MIN_DISTANCE = min(distance_from_targets)
+    print("\rturn {}    global min distance {}     current min distance".format(turn_num,MIN_DISTANCE, min(distance_from_targets)), end='')
+    if 0 in distance_from_targets:  # If we are in some target - stop
+        return False
+    return True  # else continue
 
 if __name__ == '__main__':
     main()
