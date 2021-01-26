@@ -1,3 +1,5 @@
+import matplotlib as mpl
+mpl.use('Agg')
 import numpy as np
 import random
 import math
@@ -6,7 +8,7 @@ from particle import Particle
 from target import Target
 from copy import copy
 import matplotlib.pyplot as plt
-import matplotlib as mpl
+
 
 neighbor_directions = {"right": (0, 1),
                        "left": (0, -1),
@@ -92,8 +94,10 @@ def show_grid(grid: np.ndarray, particles: List[Particle],inner_states_number: i
     if save_fig:
         plt.savefig(filename)
     #plt.show()
+    plt.close('all')
 
 def save_distance_figure(name, arr):
     plt.clf()
     plt.plot(arr)
     plt.savefig(f"{name}.png")
+    plt.close('all')

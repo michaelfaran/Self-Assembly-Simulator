@@ -10,6 +10,7 @@ from datetime import datetime
 COUNTER = 0
 MIN_DISTANCE = 1000
 import utils
+from mem_top import mem_top
 
 def load_cfg(cfg_file: IO) -> dict:
     cfg = json.loads(cfg_file)
@@ -39,12 +40,12 @@ def main():
     target1.num_of_instances = 1
     target1.local_drive = 0
     cfg = SimulationCfg()
-    cfg.length = 15
-    cfg.num_of_particles = 25
+    cfg.length = 9
+    cfg.num_of_particles = 9
     cfg.is_cyclic = True
     cfg.targets_cfg = [target1]
     global_result = []
-    runs = [-7]
+    runs = [-6,-6.5,-7,-7.5,-8,-8.5]
 
     startTime = datetime.now()
 
@@ -53,11 +54,11 @@ def main():
         for run in runs:
             outfile.write("begining run with strong interaction = {}------\n".format(run))
             target1.strong_interaction = run
-            for i in range(2):
+            for i in range(5):
                 MIN_DISTANCE=1000
                 print("begining run {} with interaction {}".format(i, run))
                 board = Board(cfg, outfile, False)  # Random initialization for TFAS measurements
-                board.run_simulation(1 * (10**6
+                board.run_simulation(5 * (10**7
 
                                           ), tfas_turn_callback, COUNTER)
                 COUNTER+=1
