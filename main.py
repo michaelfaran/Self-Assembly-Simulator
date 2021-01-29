@@ -10,7 +10,6 @@ from datetime import datetime
 COUNTER = 0
 MIN_DISTANCE = 1000
 import utils
-from mem_top import mem_top
 
 def load_cfg(cfg_file: IO) -> dict:
     cfg = json.loads(cfg_file)
@@ -126,9 +125,11 @@ def new2_turn_callback(board, turn_num):
 def tfas_turn_callback(board, turn_num):
     global MIN_DISTANCE
     distance_from_targets = board.calc_distance_from_targets()
+    if min(distance_from_targets) % 2:
+        print("wtf, odd distance")
     if min(distance_from_targets) < MIN_DISTANCE:
         MIN_DISTANCE = min(distance_from_targets)
-        if(min(distance_from_targets)<80):
+        if min(distance_from_targets) < 11:
             utils.show_grid(board.grid,board.particles,1,True,
                             "j{}r{}close_state.png".format(board.targets[0].strong_interaction,COUNTER),
                             title="Close state snapshot d={}".format(min(distance_from_targets)))
