@@ -5,13 +5,6 @@ class CallbackGlobals(object):
     COUNTER = 0
     MIN_DISTANCE = 0
 
-    @staticmethod
-    def set_counter(val: int):
-        CallbackGlobals.COUNTER = val
-
-    @staticmethod
-    def set_min_distance(val: int):
-        CallbackGlobals.MIN_DISTANCE = val
 
 
 def original_turn_callback(board, turn_num):
