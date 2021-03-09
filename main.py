@@ -23,7 +23,7 @@ def main():
             outfile.write("begining run with strong interaction = {}------\n".format(run))
             cfg.targets_cfg[0].strong_interaction = run
             for i in range(5):
-                CallbackGlobals.MIN_DISTANCE = 500
+                CallbackGlobals.MIN_DISTANCE = 1000
                 print("begining run {} with interaction {}".format(i, run))
                 board = Board(cfg, outfile, False)  # Random initialization for TFAS measurements
                 board.run_simulation(5 * (10 ** 7), tfas_turn_callback, CallbackGlobals.COUNTER)
