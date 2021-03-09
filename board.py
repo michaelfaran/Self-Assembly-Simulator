@@ -108,14 +108,26 @@ class Board:
         # TODO: Save data - energy, entropy, assembly times, etc.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, num_of_turns, turn_callback):
-        for i in range(1, num_of_turns + 1):
-            if not self.turn(i, turn_callback):
+    def run_simulation(self, num_of_turns, turn_callback, run_index):
+        turn_num=1
+        distances=[self.cfg.num_of_particles ** 2] #distance from targets along realization. bins of 5000-mean.
+        temp_buffer=0
+        while(turn_num<num_of_turns+1):
+            distance = min(self.calc_distance_from_targets())
+            temp_buffer += distance/5000
+            if turn_num % 5000 == 0:
+                distances.append(temp_buffer)
+                temp_buffer = 0
+            if not self.turn(turn_num, turn_callback):
                 #if the callback says we should stop
                 break
+            turn_num+=1
 
-        self.output_file.write("time in target: {}\n".format(self.time_in_targets))
-        print("time in target: {}\n".format(self.time_in_targets))
+        self.output_file.write("tfas: {}\n".format(turn_num))
+        self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
+        print("tfas: {}\n".format(turn_num))
+        print("minimum distance bin: {}\n".format(min(distances)))
+        utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph",distances)
 
     def physical_move(self, particle: Particle) -> None:
         """
@@ -143,10 +155,12 @@ class Board:
         # if the move is accepted, we keep it
         if utils.metropolis(-(new_energy - old_energy)):
             # update adjacency matrix
-            self.adjacency_matrix[:][particle.id] = self.adjacency_matrix[particle.id][:] = -1
+            self.adjacency_matrix[:, particle.id] = -1
+            self.adjacency_matrix[particle.id, :] = -1
             self.adjacency_matrix[particle.id][particle.id] = 10 * particle.inner_state + particle.inner_state
             for n in new_neighbors.values():
                 self.adjacency_matrix[particle.id][n] = 10 * particle.inner_state + self.particles[n].inner_state
+                self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + particle.inner_state
             return
 
         # if the move is rejected, we revert it
@@ -192,6 +206,7 @@ class Board:
         if utils.metropolis(-(new_energy - old_energy) + local_drive):
             for n in neighbors.values():
                 self.adjacency_matrix[particle.id][n] = 10 * new_state + self.particles[n].inner_state
+                self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + new_state
             self.adjacency_matrix[particle.id][particle.id] = 10 * new_state + new_state
             return
 
