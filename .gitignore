@@ -143,3 +143,4 @@ __pycache__/exceptions.cpython-38.pyc
 test.py
 
 .idea/
+*.txt
