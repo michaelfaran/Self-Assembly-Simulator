@@ -148,12 +148,25 @@ class Board:
         old_energy = self.calculate_particle_energy(particle)
         old_coordinates = particle.get_coordinates()
 
+        old_neighbors = utils.get_neighboring_elements(self.grid, particle.get_coordinates(), self.cfg.is_cyclic)
+        num_of_similar_old_neighbors = len([x for x in old_neighbors.values()
+                                            if self.particles[x].inner_state == particle.inner_state])
+
         # move particle and recalculate energy
         self.do_move_particle(particle, new_coordinates)
         new_energy = self.calculate_particle_energy(particle)
         new_neighbors = utils.get_neighboring_elements(self.grid, new_coordinates, self.cfg.is_cyclic)
+        num_of_similar_new_neighbors = len([x for x in new_neighbors.values()
+                                            if self.particles[x].inner_state == particle.inner_state])
+
+        reversed_local_drive = 0
+        if num_of_similar_old_neighbors >= 2:
+            reversed_local_drive -= self.targets[particle.inner_state].local_drive
+        if num_of_similar_new_neighbors >= 2:
+            reversed_local_drive += self.targets[particle.inner_state].local_drive
+
         # if the move is accepted, we keep it
-        if utils.metropolis(-(new_energy - old_energy)):
+        if utils.metropolis(-(new_energy - old_energy)+reversed_local_drive):
             # update adjacency matrix
             self.adjacency_matrix[:, particle.id] = -1
             self.adjacency_matrix[particle.id, :] = -1
@@ -195,15 +208,9 @@ class Board:
                                                   if self.particles[n].inner_state == original_state])
         num_of_neighbors_in_new_state = len([n for n in neighbors.values()
                                              if self.particles[n].inner_state == new_state])
-        local_drive = 0
-
-        if num_of_neighbors_in_original_state >= 2:
-            local_drive -= self.targets[original_state].local_drive
-        if num_of_neighbors_in_new_state >= 2:
-            local_drive += self.targets[new_state].local_drive
 
         # Check change probabilty and edit adjacency_matrix.
-        if utils.metropolis(-(new_energy - old_energy) + local_drive):
+        if utils.metropolis(-(new_energy - old_energy)):
             for n in neighbors.values():
                 self.adjacency_matrix[particle.id][n] = 10 * new_state + self.particles[n].inner_state
                 self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + new_state
