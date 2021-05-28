@@ -2,7 +2,7 @@ from datetime import datetime, date
 from board import Board
 from simulation_cfg import load_cfg, SimulationCfg
 import utils
-from turn_callbacks import CallbackGlobals, original_turn_callback, new2_turn_callback, tfas_turn_callback
+from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback
 from multiprocessing import Pool
 
 
