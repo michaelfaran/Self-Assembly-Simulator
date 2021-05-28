@@ -19,14 +19,14 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
         outfile.write(str(cfg.__dict__))
         outfile.write(str([target_cfg.__dict__ for target_cfg in cfg.targets_cfg]))
         outfile.write("beginning sim with with strong interaction = {}------\n".format(cfg.targets_cfg[0].strong_interaction))
-        for mu in range(6, 11):
+        for mu in range(0, 11):
             outfile.write("beginning run with mu interaction = {}------\n".format(mu))
             outfile.flush()
             for j in range(len(cfg.targets_cfg)):
                 cfg.targets_cfg[j].local_drive = mu
-                for i in range(6):
+                for run_index in range(6):
                     CallbackGlobals.MIN_DISTANCE = 1000
-                    print("beginning run {} with mu interaction {}".format(i, mu))
+                    print("beginning run {} with mu interaction {}".format(run_index, mu))
                     board = Board(cfg, outfile, start_at_target=0)  # Start at target 0, not random!!!
                     board.run_simulation(5 * (10 ** 7), time_in_target_callback, CallbackGlobals.COUNTER)
                     print('\nend run--------------')
@@ -34,7 +34,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
 
 
 if __name__ == '__main__':
-    num_targets_list = [9, 10, 11, 12, 13]
+    num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
     arg_list = []
     with open(CFG_FILE, "r") as f_cfg:
         cfg = load_cfg(f_cfg)
