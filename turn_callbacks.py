@@ -66,7 +66,7 @@ def tfas_turn_callback(board, turn_num):
 
     if min(distance_from_targets) < CallbackGlobals.MIN_DISTANCE:
         CallbackGlobals.MIN_DISTANCE = min(distance_from_targets)
-
+        """
         if min(distance_from_targets) < 11:
             utils.show_grid(board.grid, board.particles, 1, True,
                             "j{}r{}close_state.png".format(board.targets[0].strong_interaction,
@@ -77,6 +77,7 @@ def tfas_turn_callback(board, turn_num):
                             "j{}r{}target.png".format(board.targets[0].strong_interaction, CallbackGlobals.COUNTER),
                             title="Target snapshot j={} run {}".format(board.targets[0].strong_interaction,
                                                                        CallbackGlobals.COUNTER))
+    """
     print(
         "\rturn {}    global min distance {}     current min distance {}".format(turn_num, CallbackGlobals.MIN_DISTANCE,
                                                                                  min(distance_from_targets)),

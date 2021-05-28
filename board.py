@@ -127,7 +127,7 @@ class Board:
         self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
         print("tfas: {}\n".format(turn_num))
         print("minimum distance bin: {}\n".format(min(distances)))
-        utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph",distances)
+        #utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph",distances)
 
     def physical_move(self, particle: Particle) -> None:
         """
