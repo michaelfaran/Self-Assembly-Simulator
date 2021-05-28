@@ -40,5 +40,5 @@ if __name__ == '__main__':
         cfg = load_cfg(f_cfg)
     for i in num_targets_list:
         arg_list.append((cfg, i))
-    with Pool(5) as p:
+    with Pool(8) as p:
         p.starmap(simulation_manager, arg_list)
