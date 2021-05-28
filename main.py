@@ -27,7 +27,7 @@ def simulation_manager(cfg: SimulationCfg ,num_targets: int):
                 for i in range(6):
                     CallbackGlobals.MIN_DISTANCE = 1000
                     print("begining run {} with mu interaction {}".format(i, mu))
-                    board = Board(cfg, outfile, False)  # Random initialization for TFAS measurements
+                    board = Board(cfg, outfile, start_at_target=0 )  # Start at target 0, not random!!!
                     board.run_simulation(5 * (10 ** 7), tfas_turn_callback, CallbackGlobals.COUNTER)
                     print('\nend run--------------')
                     outfile.flush()

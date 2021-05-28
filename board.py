@@ -106,15 +106,11 @@ class Board:
         # TODO: Save data - energy, entropy, assembly times, etc.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, num_of_turns, turn_callback, run_index):
-        turn_num=1
-        distances=[self.cfg.num_of_particles ** 2] #distance from targets along realization. bins of 5000-mean.
-
-        while(turn_num<num_of_turns+1):
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index):
+        for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 #if the callback says we should stop
                 break
-            turn_num+=1
 
         turn_callback(self, turn_num, finished=True)
 
