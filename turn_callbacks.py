@@ -10,7 +10,8 @@ class CallbackGlobals(object):
 def time_in_target_callback(board, turn_num, finished=False):
     if finished:
         board.output_file.write("time in target: {}\n".format(board.time_in_target))
-
+        return
+    
     distance_from_targets = board.calc_distance_from_targets()
 
     print("\rturn {}".format(turn_num), end='')
@@ -29,7 +30,8 @@ def time_in_target_callback(board, turn_num, finished=False):
 def tfas_turn_callback(board, turn_num, finished=False):
     if finished:
         board.output_file.write("tfas: {}\n".format(turn_num))
-        
+        return
+
     distance_from_targets = board.calc_distance_from_targets()
 
     if min(distance_from_targets) < CallbackGlobals.MIN_DISTANCE:
