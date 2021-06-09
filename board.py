@@ -1,20 +1,27 @@
 from particle import Particle
+#A class defined for each particle.
 from simulation_cfg import SimulationCfg
 import numpy as np
 import random
 import utils
+#Self defined functions.
 from target import Target
+# The target is created in the load configuration. 
 from typing import List, Union, Tuple
+# What the function except to get (integer etc), would output error but continue if not included.
 from exceptions import TooManyParticlesError
-
+#Self defined exception, If more particles than board. 
 
 class Board:
     cfg: SimulationCfg
     particles: List[Particle]
-    grid: np.ndarray
+    #Vector of particles. This contains informations about the grid as well, and where the particle number on the grid.
+    grid: np.ndarray 
+    #Array of dimenon n is created
     targets: List[Target]
 
     def __init__(self, cfg, output_file, start_at_target=False):
+   #This is a function of the board. Each indented function is part of the class.
         self.output_file = output_file
         self.cfg = cfg
         self.targets = self.initialize_targets()
@@ -23,18 +30,21 @@ class Board:
         self.adjacency_matrix = self.initizalize_adjacency_matrix()
         self.current_target = -1
         self.time_in_target = -1
-
+    #Each object in Python has self.attribute (same as field). In the class all is intetned.
+    #This is from object oriented. Self inside the object is to say act on me. Each 
     def initialize_grid(self, length: int, num_of_particles: int, start_at_target):
         """
         Initializes grid.
         Gets list of particles, and randomly populates them in the grid.
+        Not necessraly random for start at target if given start a traget NUMBER.
         Returns the grid.
         """
-        grid = np.full((length, length), -1, int)  # Particle slots, -1 represents no particle
-        coordinates = [(i, j) for i in range(length) for j in range(length)]  # Coordinates set
+        grid = np.full((length, length), -1, int)  # Particle slots, -1 represents no particle, intialzation of grid with -1, no particle definition.
+        coordinates = [(i, j) for i in range(length) for j in range(length)]  # Coordinates set, prepares list of coordinates.
 
         if start_at_target is False:
             random.shuffle(coordinates)
+        #Shuffle the coordinates.
         else:
             self.set_particles_at_target(coordinates, start_at_target)
 
@@ -69,18 +79,19 @@ class Board:
     def initizalize_adjacency_matrix(self):
         adjacency_matrix = np.zeros((self.cfg.num_of_particles, self.cfg.num_of_particles), int)
         adjacency_matrix[:] = -1
-
+#The default for no particle neighbour is -1
         for x in range(self.cfg.length):
             for y in range(self.cfg.length):
                 if -1 == self.grid[x][y]: #if no particle there.
                     continue
                 neighbors = utils.get_neighboring_elements(self.grid, (x, y), self.cfg.is_cyclic)
+                #boubdary conditions is defined in the grid configuration file. returns hashmap\dictionary. 
                 for direction, element in neighbors.items():
                     adjacency_matrix[self.grid[x][y]][element] = 10 * self.particles[self.grid[x][y]].inner_state\
                                                                  + self.particles[element].inner_state
                 adjacency_matrix[self.grid[x][y]][self.grid[x][y]] = 10 * self.particles[self.grid[x][y]].inner_state\
                                                                      + self.particles[self.grid[x][y]].inner_state
-
+                #direction and element is extracting the matrix index in a location one by one and put it in the adjaency matrix.
         return adjacency_matrix
 
     def calculate_particle_energy(self, particle: Particle) -> Union[int, float]:
@@ -99,13 +110,19 @@ class Board:
 
     def turn(self, turn_num, turn_callback):
         particle = random.choice(self.particles)
+        #Return a random choice from the list
         self.physical_move(particle)
+        #Try physical move with Metropolis condition
         particle = random.choice(self.particles)
+        #Chose another random particle
         self.state_change(particle)
-
+        #Choose each one in random. 
+        
         # TODO: Save data - energy, entropy, assembly times, etc.
+        #Add entropy.
+        #Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
-
+        
     def run_simulation(self, max_num_of_turns, turn_callback, run_index):
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
@@ -121,29 +138,36 @@ class Board:
         energy difference metropolis query.
         """
         direction = random.choice(list(utils.neighbor_directions.keys()))
+#Take all possible directions. neighbor_directions are the dictionary,. Dictionary.keys, are turning into list. and then random takes 1 of the 4 options randomly). Value is the delta.
         direction_delta = utils.neighbor_directions[direction]
+#Direction is from the dictionary the way a praticle will go next step (up, bottom etc) 
+#plus B.C. such as 2D grid.
         new_coordinates = utils.add_coordinates(particle.get_coordinates(),
                                                 direction_delta,
                                                 self.cfg.length,
                                                 self.cfg.is_cyclic
                                                 )
-
+# This was chosen instead of just adding delta due to boundary conditions. 
         if not self.is_move_allowed(new_coordinates):
             return
-
         old_energy = self.calculate_particle_energy(particle)
+#All the energy of the particle contribution to total energy.
         old_coordinates = particle.get_coordinates()
 
         # move particle and recalculate energy
         self.do_move_particle(particle, new_coordinates)
         new_energy = self.calculate_particle_energy(particle)
+#New energy after particle motion.
         new_neighbors = utils.get_neighboring_elements(self.grid, new_coordinates, self.cfg.is_cyclic)
-        # if the move is accepted, we keep it
+        # Here we take all the new neihbours ot he particle. if the move is accepted, we keep it, and zero the neihgbors.
         if utils.metropolis(-(new_energy - old_energy)):
             # update adjacency matrix
             self.adjacency_matrix[:, particle.id] = -1
+#I will forget mine.
             self.adjacency_matrix[particle.id, :] = -1
+    #They will forget me.
             self.adjacency_matrix[particle.id][particle.id] = 10 * particle.inner_state + particle.inner_state
+            #This is due to how we keep the particle and its neighbours new state in the neighbouring matrix. MIGHT BE REFACORTED. 
             for n in new_neighbors.values():
                 self.adjacency_matrix[particle.id][n] = 10 * particle.inner_state + self.particles[n].inner_state
                 self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + particle.inner_state
@@ -175,7 +199,7 @@ class Board:
         particle.inner_state = new_state
         new_energy = self.calculate_particle_energy(particle)
 
-        # calculate local drive
+        # calculate local drive, Michael will go through this again.
         neighbors = utils.get_neighboring_elements(self.grid, particle.get_coordinates(), self.cfg.is_cyclic)
         num_of_neighbors_in_original_state = len([n for n in neighbors.values()
                                                   if self.particles[n].inner_state == original_state])
@@ -205,7 +229,7 @@ class Board:
         self.grid[destination_coordinates[0]][destination_coordinates[1]] = particle.id  # move particle on grid
         particle.x, particle.y = destination_coordinates[0], destination_coordinates[1]  # update particle coordinates
 
-
+#**The neibougring matrix are compared, due to rotation and transaltation symmetries.  A key point that might be troublsome. To further explain the project book.
     def calc_distance_from_targets(self):
         distances = []
         for i in self.targets:
@@ -220,6 +244,6 @@ class Board:
         for i in range(particles_array_length):
             for j in range(particles_array_length):
                 coordinates[target_grid[i][j]] = (i, j)
-
+#If we choose to start in target, what types etc. 
 
 
