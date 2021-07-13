@@ -1,0 +1,78 @@
+{'length': 15, 'num_of_particles': 25, 'targets_cfg': [<simulation_cfg.TargetCfg object at 0x00000218E6EDD848>], 'is_cyclic': True}[{'weak_interaction': -1, 'strong_interaction': -7, 'num_of_instances': 5, 'local_drive': 0}]beginning sim with with strong interaction = -7------
+beginning run with mu interaction = 0------
+time in target: 33430
+time in target: 36250
+time in target: 38937
+time in target: 38361
+time in target: 32762
+time in target: 32952
+beginning run with mu interaction = 1------
+time in target: 44679
+time in target: 45056
+time in target: 44139
+time in target: 38329
+time in target: 42718
+time in target: 42929
+beginning run with mu interaction = 2------
+time in target: 48165
+time in target: 46950
+time in target: 49095
+time in target: 47547
+time in target: 46703
+time in target: 45284
+beginning run with mu interaction = 3------
+time in target: 46514
+time in target: 47163
+time in target: 49329
+time in target: 49331
+time in target: 49231
+time in target: 48461
+beginning run with mu interaction = 4------
+time in target: 48855
+time in target: 49871
+time in target: 49217
+time in target: 49435
+time in target: 48095
+time in target: 49769
+beginning run with mu interaction = 5------
+time in target: 49808
+time in target: 49999
+time in target: 49939
+time in target: 49999
+time in target: 49969
+time in target: 49987
+beginning run with mu interaction = 6------
+time in target: 49999
+time in target: 49999
+time in target: 49697
+time in target: 49999
+time in target: 49999
+time in target: 49752
+beginning run with mu interaction = 7------
+time in target: 49851
+time in target: 49999
+time in target: 49857
+time in target: 49999
+time in target: 49937
+time in target: 49999
+beginning run with mu interaction = 8------
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49870
+time in target: 49999
+beginning run with mu interaction = 9------
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49953
+beginning run with mu interaction = 10------
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999
+time in target: 49999

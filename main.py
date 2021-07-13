@@ -3,8 +3,12 @@ from board import Board
 from simulation_cfg import load_cfg, SimulationCfg
 import utils
 from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback
-# This is the options names for the simulations. put it inside next. 
+# This is the options names for the simulations. put it inside next.
 from multiprocessing import Pool
+import numpy as np
+import scipy as sp
+from scipy.io import savemat
+import math
 
 
 CFG_FILE = "cfg.json"
@@ -17,19 +21,25 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
     filename = "output_"+date_string+"_interaction_"+str(cfg.targets_cfg[0].strong_interaction)+"_targets_"+str(num_targets)+".txt"
 
     with open(filename,"w") as outfile:
-#Way in python to say- open this file. no end, just indientation. 
+#Way in python to say- open this file. no end, just indientation.
+#Michael add of Entropy calculation
+        TurnMaxNumber = 5 * (10 ** 6)
+        RunMax = 3
+        muMax = 3
+        EntropyMegaArray=np.zeros((muMax,len(cfg.targets_cfg),RunMax,TurnMaxNumber))
+        FixParallel=np.zeros((muMax,len(cfg.targets_cfg),RunMax))
         cfg.targets_cfg[0].num_of_instances = num_targets
         outfile.write(str(cfg.__dict__))
         outfile.write(str([target_cfg.__dict__ for target_cfg in cfg.targets_cfg]))
         outfile.write("beginning sim with with strong interaction = {}------\n".format(cfg.targets_cfg[0].strong_interaction))
-        for mu in range(0, 11):
+        for mu in range(0, muMax):
 #Different drives choices for the simulation
             outfile.write("beginning run with mu interaction = {}------\n".format(mu))
             outfile.flush()
             for j in range(len(cfg.targets_cfg)):
 #For every target change local drive
                 cfg.targets_cfg[j].local_drive = mu
-                for run_index in range(6):
+                for run_index in range(0, RunMax):
 #Number of iterations of the simulation
                     CallbackGlobals.MIN_DISTANCE = 1000
 #Maximum length parameter. Save information outside the main, save in the callback. In each callback we search the 
@@ -38,14 +48,19 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     print("beginning run {} with mu interaction {}".format(run_index, mu))
                     board = Board(cfg, outfile, start_at_target=0)  # Start at target 0, not random!!!
                     #This is the initial target to start with, its name is 0. otherwise put false for totally random.
-                    #A new class is used here. This class reperestns the lattice and other things, also runs interations.  
-                    board.run_simulation(5 * (10 ** 7), time_in_target_callback, CallbackGlobals.COUNTER)
+                    #A new class is used here. This class reperestns the lattice and other things, also runs interations.
+                    entropy_vec=np.zeros(TurnMaxNumber)
+                    board.run_simulation(TurnMaxNumber, time_in_target_callback, CallbackGlobals.COUNTER,
+                                                      entropy_vec)
                     #The first index is the number of time steps. dt is considered 1. turns instead of time constant. Counter is counting the number of turns. This is a possible to print to the user.
                     # The second index is what you want to simulation to do, IMPORTANT. this is a function. All the function possibilities are written above. If in the future we want to add another model
                     # it is possible by adding another name and file to this code.
+                    EntropyMegaArray[mu][j][run_index] = entropy_vec
+                    FixParallel[mu][j][run_index] = mu
                     print('\nend run--------------')
                     outfile.flush()
-
+        savemat("EntropyMegaArray.mat", {"foo":EntropyMegaArray})
+        savemat("FixParallel.mat", {"foo2":FixParallel})
 
 if __name__ == '__main__':
 #This is a check for number of different targets done for the project. This is a Python syntax, for if I ran this file as main.

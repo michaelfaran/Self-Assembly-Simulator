@@ -1,9 +1,12 @@
 from particle import Particle
+##from entropy import Entropy
+from particle import Particle
 #A class defined for each particle.
 from simulation_cfg import SimulationCfg
 import numpy as np
 import random
 import utils
+import math
 #Self defined functions.
 from target import Target
 # The target is created in the load configuration. 
@@ -13,6 +16,7 @@ from exceptions import TooManyParticlesError
 #Self defined exception, If more particles than board. 
 
 class Board:
+    entropy: int
     cfg: SimulationCfg
     particles: List[Particle]
     #Vector of particles. This contains informations about the grid as well, and where the particle number on the grid.
@@ -30,6 +34,9 @@ class Board:
         self.adjacency_matrix = self.initizalize_adjacency_matrix()
         self.current_target = -1
         self.time_in_target = -1
+        self.entropy_add = 0
+
+
     #Each object in Python has self.attribute (same as field). In the class all is intetned.
     #This is from object oriented. Self inside the object is to say act on me. Each 
     def initialize_grid(self, length: int, num_of_particles: int, start_at_target):
@@ -123,11 +130,15 @@ class Board:
         #Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
         
-    def run_simulation(self, max_num_of_turns, turn_callback, run_index):
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec):
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 #if the callback says we should stop
-                break
+                entropy_vec[turn_num] = self.entropy_add
+                return entropy_vec
+                #break
+
+            entropy_vec[turn_num]=self.entropy_add
 
         turn_callback(self, turn_num, finished=True)
 
@@ -160,8 +171,15 @@ class Board:
 #New energy after particle motion.
         new_neighbors = utils.get_neighboring_elements(self.grid, new_coordinates, self.cfg.is_cyclic)
         # Here we take all the new neihbours ot he particle. if the move is accepted, we keep it, and zero the neihgbors.
+        kenb = utils.metropolis(-(new_energy - old_energy))
         if utils.metropolis(-(new_energy - old_energy)):
-            # update adjacency matrix
+           #add entropy of step
+            self.entropy_add = math.log((utils.metropolis_part_1(
+               -(new_energy - old_energy)) / utils.metropolis_part_1(
+               (new_energy - old_energy))))
+            #if self.entropy_add < 0:
+             #   self.entropy_add = 0
+           # update adjacency matrix
             self.adjacency_matrix[:, particle.id] = -1
 #I will forget mine.
             self.adjacency_matrix[particle.id, :] = -1
@@ -175,6 +193,7 @@ class Board:
 
         # if the move is rejected, we revert it
         self.do_move_particle(particle, old_coordinates)
+        self.entropy_add =0
         return
 
     def is_move_allowed(self, new_coordinates: Tuple[int]) -> bool:
@@ -211,17 +230,30 @@ class Board:
             local_drive -= self.targets[original_state].local_drive
         if num_of_neighbors_in_new_state >= 2:
             local_drive += self.targets[new_state].local_drive
+            AA=utils.metropolis_part_1(-(new_energy - old_energy) + local_drive)
+            BB=utils.metropolis_part_1((new_energy - old_energy) + local_drive)
+            aaaa= math.log(AA/BB)
+        #self.entropy_add = math.log((utils.metropolis_part_1(-(new_energy - old_energy) + local_drive)/utils.
+                                     #metropolis_part_1((new_energy - old_energy) - local_drive)))
+
 
         # Check change probabilty and edit adjacency_matrix.
-        if utils.metropolis(-(new_energy - old_energy) + local_drive):
+        kenb = utils.metropolis(-(new_energy - old_energy) + local_drive)
+        if utils.metropolis(-(new_energy - old_energy) + local_drive) :
             for n in neighbors.values():
                 self.adjacency_matrix[particle.id][n] = 10 * new_state + self.particles[n].inner_state
                 self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + new_state
             self.adjacency_matrix[particle.id][particle.id] = 10 * new_state + new_state
+            self.entropy_add = math.log((utils.metropolis_part_1(-(new_energy - old_energy) + local_drive) / utils.metropolis_part_1((new_energy - old_energy) - local_drive)))
+            #if self.entropy_add < 0 :
+             #   self.entropy_add = 0
             return
 
         # if change rejected, revert state
         particle.inner_state = original_state
+        self.entropy_add = 0
+
+
         return
 
     def do_move_particle(self, particle, destination_coordinates):
@@ -229,7 +261,8 @@ class Board:
         self.grid[destination_coordinates[0]][destination_coordinates[1]] = particle.id  # move particle on grid
         particle.x, particle.y = destination_coordinates[0], destination_coordinates[1]  # update particle coordinates
 
-#**The neibougring matrix are compared, due to rotation and transaltation symmetries.  A key point that might be troublsome. To further explain the project book.
+#**The neibougring matrix are compared, due to rotation and transaltation symmetries.  A key point that might be troubl
+    # some. To further explain the project book.
     def calc_distance_from_targets(self):
         distances = []
         for i in self.targets:

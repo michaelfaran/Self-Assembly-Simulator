@@ -26,6 +26,18 @@ def metropolis(r: Union[float, int]) -> bool:
     else:
         return np.random.binomial(1, p, 1) == 1
 
+def metropolis_part_1(r: Union[float, int]) -> Union[int, float]:
+    """
+    Awaken the sleeper
+    """
+    """
+    Implements the Metropolis criterion, gets the acceptation probability p
+    """
+    p = math.exp(r)
+    if p >= 1:
+        return 1
+    else:
+        return p
 
 def get_neighboring_elements(array: np.ndarray, coordinates: Tuple[int, int], is_cyclic: bool=False,) -> dict:
     """
