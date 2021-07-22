@@ -9,6 +9,9 @@ import numpy as np
 import scipy as sp
 from scipy.io import savemat
 import math
+import re
+
+#
 
 
 CFG_FILE = "cfg.json"
@@ -23,7 +26,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
     with open(filename,"w") as outfile:
 #Way in python to say- open this file. no end, just indientation.
 #Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 6)
+        TurnMaxNumber = 5 * (10 ** 2)
         RunMax = 3
         muMax = 3
         EntropyMegaArray=np.zeros((muMax,len(cfg.targets_cfg),RunMax,TurnMaxNumber))
@@ -32,14 +35,22 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
         outfile.write(str(cfg.__dict__))
         outfile.write(str([target_cfg.__dict__ for target_cfg in cfg.targets_cfg]))
         outfile.write("beginning sim with with strong interaction = {}------\n".format(cfg.targets_cfg[0].strong_interaction))
+#<<<<<<< Updated upstream
         for mu in range(0, muMax):
+#=======
+        #for mu in range(0, 1):
+#>>>>>>> Stashed changes
 #Different drives choices for the simulation
             outfile.write("beginning run with mu interaction = {}------\n".format(mu))
             outfile.flush()
             for j in range(len(cfg.targets_cfg)):
 #For every target change local drive
                 cfg.targets_cfg[j].local_drive = mu
+#<<<<<<< Updated upstream
                 for run_index in range(0, RunMax):
+#=======
+                #for run_index in range(1):
+#>>>>>>> Stashed changes
 #Number of iterations of the simulation
                     CallbackGlobals.MIN_DISTANCE = 1000
 #Maximum length parameter. Save information outside the main, save in the callback. In each callback we search the 
@@ -59,13 +70,22 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     FixParallel[mu][j][run_index] = mu
                     print('\nend run--------------')
                     outfile.flush()
-        savemat("EntropyMegaArray.mat", {"foo":EntropyMegaArray})
-        savemat("FixParallel.mat", {"foo2":FixParallel})
+                    now = datetime.now()
+                    #dt_string = now.strftime("%H:%M:%S")
+                    name: str = "entropy_vec" +"_mu_"+str(int(mu))+"_run_num_"+str(int(run_index)+1)+"_num_target_"+str(int(j)+1) +".mat"
+                    #name2: str = "mu" + dt_string + ".mat"
+                    #name = re.sub(':',  '_', name)
+                    #name2 = re.sub(':',  '_', name2)
+                    savemat(name, {"foo":entropy_vec})
+                    #savemat(name2, {"foo2":mu})
+       # savemat("EntropyMegaArray.mat", {"foo":EntropyMegaArray})
+        #savemat("FixParallel.mat", {"foo2":FixParallel})
 
 if __name__ == '__main__':
 #This is a check for number of different targets done for the project. This is a Python syntax, for if I ran this file as main.
 #What would happen if you run this inside python sledom and not outside.
     num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
+    #num_targets_list = [20]
 #Changing the number of targets.
     arg_list = []
     with open(CFG_FILE, "r") as f_cfg:
