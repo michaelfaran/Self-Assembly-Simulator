@@ -26,7 +26,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
     with open(filename,"w") as outfile:
 #Way in python to say- open this file. no end, just indientation.
 #Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 2)
+        TurnMaxNumber = 5 * (10 ** 3)
         RunMax = 3
         muMax = 3
         EntropyMegaArray=np.zeros((muMax,len(cfg.targets_cfg),RunMax,TurnMaxNumber))
@@ -57,6 +57,11 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
 #each parameter you want, we use this parameter here in order to take "snapshots".
 #along with saving the minimum distance.
                     print("beginning run {} with mu interaction {}".format(run_index, mu))
+
+
+                    now = datetime.now()
+                    current_time = now.strftime("%H:%M:%S")
+                    outfile.write(f"start time: {current_time}\n")
                     board = Board(cfg, outfile, start_at_target=0)  # Start at target 0, not random!!!
                     #This is the initial target to start with, its name is 0. otherwise put false for totally random.
                     #A new class is used here. This class reperestns the lattice and other things, also runs interations.
@@ -68,10 +73,11 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     # it is possible by adding another name and file to this code.
                     EntropyMegaArray[mu][j][run_index] = entropy_vec
                     FixParallel[mu][j][run_index] = mu
-                    print('\nend run--------------')
-                    outfile.flush()
+                    print('\nend run--------------\n')
                     now = datetime.now()
-                    #dt_string = now.strftime("%H:%M:%S")
+                    current_time = now.strftime("%H:%M:%S")
+                    outfile.write(f"end time: {current_time}\n\n")
+                    outfile.flush()
                     name: str = "entropy_vec" +"_mu_"+str(int(mu))+"_run_num_"+str(int(run_index)+1)+"_num_target_"+str(int(j)+1) +".mat"
                     #name2: str = "mu" + dt_string + ".mat"
                     #name = re.sub(':',  '_', name)
