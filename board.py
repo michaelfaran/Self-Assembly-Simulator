@@ -1,7 +1,4 @@
-from particle import Particle
-##from entropy import Entropy
-from particle import Particle
-#A class defined for each particle.
+from particle import Particle  # A class defined for each particle.
 from simulation_cfg import SimulationCfg
 import numpy as np
 import random
@@ -123,9 +120,7 @@ class Board:
         particle = random.choice(self.particles)
         #Chose another random particle
         self.state_change(particle)
-        #Choose each one in random. 
-        
-        # TODO: Save data - energy, entropy, assembly times, etc.
+        #Choose each one in random.
         #Add entropy.
         #Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
@@ -138,7 +133,7 @@ class Board:
                 return entropy_vec
                 #break
 
-            entropy_vec[turn_num]=self.entropy_add
+            entropy_vec[turn_num] = self.entropy_add
 
         turn_callback(self, turn_num, finished=True)
 
@@ -177,8 +172,7 @@ class Board:
             self.entropy_add = math.log((utils.metropolis_part_1(
                -(new_energy - old_energy)) / utils.metropolis_part_1(
                (new_energy - old_energy))))
-            #if self.entropy_add < 0:
-             #   self.entropy_add = 0
+
            # update adjacency matrix
             self.adjacency_matrix[:, particle.id] = -1
 #I will forget mine.
@@ -193,7 +187,7 @@ class Board:
 
         # if the move is rejected, we revert it
         self.do_move_particle(particle, old_coordinates)
-        self.entropy_add =0
+        self.entropy_add = 0
         return
 
     def is_move_allowed(self, new_coordinates: Tuple[int]) -> bool:
@@ -245,8 +239,6 @@ class Board:
                 self.adjacency_matrix[n][particle.id] = 10 * self.particles[n].inner_state + new_state
             self.adjacency_matrix[particle.id][particle.id] = 10 * new_state + new_state
             self.entropy_add = math.log((utils.metropolis_part_1(-(new_energy - old_energy) + local_drive) / utils.metropolis_part_1((new_energy - old_energy) - local_drive)))
-            #if self.entropy_add < 0 :
-             #   self.entropy_add = 0
             return
 
         # if change rejected, revert state
