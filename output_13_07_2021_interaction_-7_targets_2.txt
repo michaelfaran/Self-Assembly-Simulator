@@ -1,6 +1,0 @@
-{'length': 15, 'num_of_particles': 25, 'targets_cfg': [<simulation_cfg.TargetCfg object at 0x000001ABA1EAEC48>], 'is_cyclic': True}[{'weak_interaction': -1, 'strong_interaction': -7, 'num_of_instances': 2, 'local_drive': 0}]beginning sim with with strong interaction = -7------
-beginning run with mu interaction = 0------
-time in target: 4445949
-time in target: 4891784
-time in target: 4450557
-beginning run with mu interaction = 1------
