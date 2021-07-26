@@ -11,9 +11,6 @@ import scipy as sp
 from scipy.io import savemat
 import math
 import re
-from guppy import hpy
-
-h = hpy()
 #
 
 
