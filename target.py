@@ -6,7 +6,9 @@ from exceptions import NonSquareParticlesNumber
 
 
 class Target(object):
-    def __init__(self, id, num_of_particles, weak_interaction, strong_interaction, local_drive=0):
+    def __init__(
+        self, id, num_of_particles, weak_interaction, strong_interaction, local_drive=0
+    ):
         self.id = id
         self.particles_grid = self.build_particles_grid(num_of_particles)
         self.adjacency_matrix = self.build_adjacency_matrix(self.particles_grid)
@@ -22,14 +24,15 @@ class Target(object):
 
         for x in range(array_length):
             for y in range(array_length):
-                neighbors = utils.get_neighboring_elements(particles, (x, y), is_cyclic=False)
+                neighbors = utils.get_neighboring_elements(
+                    particles, (x, y), is_cyclic=False
+                )
                 for direction, element in neighbors.items():
                     adjacency_matrix[particles[x][y]][element] = self.id * 11
 
                 adjacency_matrix[particles[x][y]][particles[x][y]] = self.id * 11
 
         return adjacency_matrix
-
 
     def build_particles_grid(self, num_of_particles):
         if num_of_particles != math.sqrt(num_of_particles) ** 2:
@@ -46,7 +49,9 @@ class Target(object):
               function of Board. Even tough the board function may be erased.
         """
         indicator = 1 if self.are_neighboors_in_target(p1, p2) else 0
-        return self.strong_interaction * indicator + self.weak_interaction * (1 - indicator)
+        return self.strong_interaction * indicator + self.weak_interaction * (
+            1 - indicator
+        )
 
     def are_neighboors_in_target(self, p1, p2):
         return 1 if self.adjacency_matrix[p1][p2] != -1 else 0
