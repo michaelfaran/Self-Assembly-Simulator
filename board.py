@@ -163,16 +163,16 @@ class Board:
         # Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec):
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index):
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 pass
                 # if the callback says we should stop
-                #entropy_vec[turn_num] = self.entropy_add
-                #return entropy_vec
-                # break
+                # entropy_vec[turn_num] = self.entropy_add
+                # return entropy_vec
+                break
 
-            entropy_vec[turn_num] = self.entropy_add
+            # entropy_vec[turn_num] = self.entropy_add
 
         turn_callback(self, turn_num, finished=True)
 
