@@ -7,16 +7,16 @@ from exceptions import NonSquareParticlesNumber
 
 class Target(object):
     def __init__(
-        self, id, num_of_particles, weak_interaction, strong_interaction, local_drive=0
+        self, id, num_of_particles, weak_interaction, strong_interaction, local_drive, enconding_factor
     ):
         self.id = id
         self.particles_grid = self.build_particles_grid(num_of_particles)
-        self.adjacency_matrix = self.build_adjacency_matrix(self.particles_grid)
+        self.adjacency_matrix = self.build_adjacency_matrix(self.particles_grid, enconding_factor)
         self.weak_interaction = weak_interaction
         self.strong_interaction = strong_interaction
         self.local_drive = local_drive
 
-    def build_adjacency_matrix(self, particles: np.ndarray) -> np.ndarray:
+    def build_adjacency_matrix(self, particles: np.ndarray, enconding_factor: int) -> np.ndarray:
         num_of_particles = particles.size
         array_length = particles.shape[0]
         adjacency_matrix = np.zeros((num_of_particles, num_of_particles), int)
@@ -28,9 +28,9 @@ class Target(object):
                     particles, (x, y), is_cyclic=False
                 )
                 for direction, element in neighbors.items():
-                    adjacency_matrix[particles[x][y]][element] = self.id * 11
+                    adjacency_matrix[particles[x][y]][element] = self.id * (enconding_factor + 1)
 
-                adjacency_matrix[particles[x][y]][particles[x][y]] = self.id * 11
+                adjacency_matrix[particles[x][y]][particles[x][y]] = self.id * (enconding_factor + 1)
 
         return adjacency_matrix
 

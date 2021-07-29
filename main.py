@@ -67,7 +67,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     current_time = now.strftime("%H:%M:%S")
                     outfile.write(f"start time: {current_time}\n")
                     board = Board(
-                        cfg, outfile, start_at_target=0
+                        cfg, outfile, start_at_target=35
                     )  # Start at target 0, not random!!!
                     # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                     # A new class is used here. This class reperestns the lattice and other things, also runs interations.
@@ -112,4 +112,4 @@ if __name__ == "__main__":
         arg_list.append((cfg, i))
         # Multiprocessing of many CPUs on python Syntax.
     with Pool(8) as p:
-        p.starmap(simulation_manager, arg_list)
+       p.starmap(simulation_manager, arg_list)

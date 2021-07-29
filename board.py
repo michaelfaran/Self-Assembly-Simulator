@@ -30,12 +30,13 @@ class Board:
         # This is a function of the board. Each indented function is part of the class.
         self.output_file = output_file
         self.cfg = cfg
+        self.adjacency_matrix_encoding_factor = 10 ** (math.floor(math.log10(self.get_num_of_targets())) + 1)
         self.targets = self.initialize_targets()
         self.particles = self.initialize_particles_list(start_at_target)
         self.grid = self.initialize_grid(
             cfg.length, cfg.num_of_particles, start_at_target
         )
-        self.adjacency_matrix = self.initizalize_adjacency_matrix()
+        self.adjacency_matrix = self.initizalize_adjacency_matrix(self.adjacency_matrix_encoding_factor)
         self.current_target = -1
         self.time_in_target = -1
         self.entropy_add = 0
@@ -68,6 +69,13 @@ class Board:
             self.particles[i].x, self.particles[i].y = x, y
         return grid
 
+    def get_num_of_targets(self):
+        num_of_targets = 0
+        for config in self.cfg.targets_cfg:
+            for i in range(config.num_of_instances):
+                num_of_targets += 1
+        return num_of_targets
+
     def initialize_particles_list(self, start_at_target):
         if start_at_target is False:
             return [
@@ -92,12 +100,13 @@ class Board:
                         config.weak_interaction,
                         config.strong_interaction,
                         config.local_drive,
+                        self.adjacency_matrix_encoding_factor
                     )
                 )
                 id += 1
         return targets
 
-    def initizalize_adjacency_matrix(self):
+    def initizalize_adjacency_matrix(self, encoding_factor):
         adjacency_matrix = np.zeros(
             (self.cfg.num_of_particles, self.cfg.num_of_particles), int
         )
@@ -113,11 +122,11 @@ class Board:
                 # boubdary conditions is defined in the grid configuration file. returns hashmap\dictionary.
                 for direction, element in neighbors.items():
                     adjacency_matrix[self.grid[x][y]][element] = (
-                        10 * self.particles[self.grid[x][y]].inner_state
+                        encoding_factor * self.particles[self.grid[x][y]].inner_state
                         + self.particles[element].inner_state
                     )
                 adjacency_matrix[self.grid[x][y]][self.grid[x][y]] = (
-                    10 * self.particles[self.grid[x][y]].inner_state
+                    encoding_factor * self.particles[self.grid[x][y]].inner_state
                     + self.particles[self.grid[x][y]].inner_state
                 )
                 # direction and element is extracting the matrix index in a location one by one and put it in the adjaency matrix.
@@ -213,15 +222,15 @@ class Board:
             self.adjacency_matrix[particle.id, :] = -1
             # They will forget me.
             self.adjacency_matrix[particle.id][particle.id] = (
-                10 * particle.inner_state + particle.inner_state
+                self.adjacency_matrix_encoding_factor * particle.inner_state + particle.inner_state
             )
             # This is due to how we keep the particle and its neighbours new state in the neighbouring matrix. MIGHT BE REFACORTED.
             for n in new_neighbors.values():
                 self.adjacency_matrix[particle.id][n] = (
-                    10 * particle.inner_state + self.particles[n].inner_state
+                    self.adjacency_matrix_encoding_factor * particle.inner_state + self.particles[n].inner_state
                 )
                 self.adjacency_matrix[n][particle.id] = (
-                    10 * self.particles[n].inner_state + particle.inner_state
+                    self.adjacency_matrix_encoding_factor * self.particles[n].inner_state + particle.inner_state
                 )
             return
 
@@ -289,12 +298,12 @@ class Board:
         if utils.metropolis(-(new_energy - old_energy) + local_drive):
             for n in neighbors.values():
                 self.adjacency_matrix[particle.id][n] = (
-                    10 * new_state + self.particles[n].inner_state
+                    self.adjacency_matrix_encoding_factor * new_state + self.particles[n].inner_state
                 )
                 self.adjacency_matrix[n][particle.id] = (
-                    10 * self.particles[n].inner_state + new_state
+                    self.adjacency_matrix_encoding_factor * self.particles[n].inner_state + new_state
                 )
-            self.adjacency_matrix[particle.id][particle.id] = 10 * new_state + new_state
+            self.adjacency_matrix[particle.id][particle.id] = self.adjacency_matrix_encoding_factor * new_state + new_state
             self.entropy_add = math.log(
                 (
                     utils.metropolis_part_1(-(new_energy - old_energy) + local_drive)
