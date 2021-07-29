@@ -4,7 +4,7 @@
     "targets_cfg": [
         {
             "weak_interaction": -1,
-            "strong_interaction": -7,
+            "strong_interaction": -4,
             "num_of_instances": 40,
             "local_drive": 0
         }

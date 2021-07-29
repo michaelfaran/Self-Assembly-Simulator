@@ -166,9 +166,10 @@ class Board:
     def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec):
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
+                pass
                 # if the callback says we should stop
-                entropy_vec[turn_num] = self.entropy_add
-                return entropy_vec
+                #entropy_vec[turn_num] = self.entropy_add
+                #return entropy_vec
                 # break
 
             entropy_vec[turn_num] = self.entropy_add
