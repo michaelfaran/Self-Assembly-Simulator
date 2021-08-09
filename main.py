@@ -35,7 +35,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
     with open(filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 5)
+        TurnMaxNumber = 5 * (10 ** 7)
         RunMax = 3
         muMax = 3
         cfg.targets_cfg[0].num_of_instances = num_targets
@@ -67,16 +67,17 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     current_time = now.strftime("%H:%M:%S")
                     outfile.write(f"start time: {current_time}\n")
                     board = Board(
-                        cfg, outfile, start_at_target=35
-                    )  # Start at target 0, not random!!!
+                        cfg, outfile, start_at_target=False)  # Start at target 0, not random!!!
                     # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                     # A new class is used here. This class reperestns the lattice and other things, also runs interations.
                     entropy_vec = np.zeros(TurnMaxNumber)
+                    distance_vec = np.zeros(TurnMaxNumber)
                     board.run_simulation(
                         TurnMaxNumber,
                         time_in_target_callback,
                         CallbackGlobals.COUNTER,
                         entropy_vec,
+                        distance_vec
                     )
                     # The first index is the number of time steps. dt is considered 1. turns instead of time constant. Counter is counting the number of turns. This is a possible to print to the user.
                     # The second index is what you want to simulation to do, IMPORTANT. this is a function. All the function possibilities are written above. If in the future we want to add another model
@@ -97,12 +98,24 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                         + ".mat"
                     )
                     savemat(name, {"foo": entropy_vec})
+                    name: str = (
+                            "distance_vec"
+                            + "_mu_"
+                            + str(int(mu))
+                            + "_run_num_"
+                            + str(int(run_index) + 1)
+                            + "_num_target_"
+                            + str(int(j) + 1)
+                            + ".mat"
+                    )
+                    savemat(name, {"foo": distance_vec})
 
 
 if __name__ == "__main__":
     # This is a check for number of different targets done for the project. This is a Python syntax, for if I ran this file as main.
     # What would happen if you run this inside python sledom and not outside.
     num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
+    num_targets_list = [1]
     # Changing the number of targets.
     arg_list = []
     with open(CFG_FILE, "r") as f_cfg:
@@ -112,4 +125,4 @@ if __name__ == "__main__":
         arg_list.append((cfg, i))
         # Multiprocessing of many CPUs on python Syntax.
     with Pool(8) as p:
-       p.starmap(simulation_manager, arg_list)
+        p.starmap(simulation_manager, arg_list)
