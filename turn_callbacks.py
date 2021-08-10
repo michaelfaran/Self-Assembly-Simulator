@@ -38,7 +38,7 @@ def tfas_turn_callback(board, turn_num, finished=False):
     # If we decide to follow entropy, we should write in the board, since it depends on the past.
 
     distance_from_targets = board.calc_distance_from_targets()
-
+    board.distance_vec[turn_num]= min(distance_from_targets)
     if min(distance_from_targets) < CallbackGlobals.MIN_DISTANCE:
         CallbackGlobals.MIN_DISTANCE = min(distance_from_targets)
         """

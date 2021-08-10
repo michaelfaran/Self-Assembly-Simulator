@@ -163,24 +163,25 @@ class Board:
         # Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec,distance_vec):
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec):
+        self.distance_vec = np.zeros(max_num_of_turns)
         distances = [self.cfg.num_of_particles ** 2]  # distance from targets along realization. bins of 5000-mean.
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 # if the callback says we should stop
                 entropy_vec[turn_num] = self.entropy_add
-                distance_vec[turn_num] = min(self.calc_distance_from_targets())
-                return entropy_vec, distance_vec
+                #distance_vec[turn_num] = min(self.calc_distance_from_targets())
+                return entropy_vec
                 # break
 
             #self.output_file.write("time in target: {}\n".format(self.time_in_targets))
             #print("time in target: {}\n".format(self.time_in_targets))
-            self.output_file.write("tfas: {}\n".format(turn_num))
-            self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
-            print("tfas: {}\n".format(turn_num))
-            print("minimum distance bin: {}\n".format(min(distances)))
-            utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph", distances)
-            distance_vec[turn_num] = min(self.calc_distance_from_targets())
+            #self.output_file.write("tfas: {}\n".format(turn_num))
+            #self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
+            #print("tfas: {}\n".format(turn_num))
+            #print("minimum distance bin: {}\n".format(min(distances)))
+            #utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph", distances)
+           # distance_vec[turn_num] = min(self.calc_distance_from_targets())
             entropy_vec[turn_num] = self.entropy_add
 
         turn_callback(self, turn_num, finished=True)
