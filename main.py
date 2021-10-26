@@ -3,7 +3,7 @@ from board import Board
 from simulation_cfg import load_cfg, SimulationCfg
 import utils
 from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback
-
+import os
 # This is the options names for the simulations. put it inside next.
 from multiprocessing import Pool
 import numpy as np
@@ -21,7 +21,9 @@ CFG_FILE = "cfg.json"
 def simulation_manager(cfg: SimulationCfg, num_targets: int):
     # Everyhing that the main does. The motivation is to change the parameters without creating different files.
     today = date.today()
+    now = datetime.now()
     date_string = today.strftime("%d_%m_%Y")
+    date_string_two = now.strftime("%m_%d_%Y_%H_%M_%S")
     filename = (
         "output_"
         + date_string
@@ -31,8 +33,13 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
         + str(num_targets)
         + ".txt"
     )
+#michael add for new fodler created
+    script_dir = os.path.dirname(__file__)
+    results_dir = os.path.join(script_dir, 'Results\\'+date_string_two+"\\")
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
 
-    with open(filename, "w") as outfile:
+    with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
         TurnMaxNumber = 5 * (10 ** 7)
@@ -51,12 +58,13 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
             # Different drives choices for the simulation
             outfile.write("beginning run with mu interaction = {}------\n".format(mu))
             outfile.flush()
+            check = range(len(cfg.targets_cfg))
             for j in range(len(cfg.targets_cfg)):
                 # For every target change local drive
                 cfg.targets_cfg[j].local_drive = mu
                 for run_index in range(0, RunMax):
-                    # Number of iterations of the simulation
-                    CallbackGlobals.MIN_DISTANCE = 1000
+                    # Number of iterations of the simulation, 100 originally
+                    CallbackGlobals.MIN_DISTANCE = 30
                     # Maximum length parameter. Save information outside the main, save in the callback. In each callback we search the
                     # each parameter you want, we use this parameter here in order to take "snapshots".
                     # along with saving the minimum distance.
@@ -70,12 +78,21 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                         cfg, outfile, start_at_target=False)  # Start at target 0, not random!!!
                     # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                     # A new class is used here. This class reperestns the lattice and other things, also runs interations.
+                    run_indexz= run_index
                     entropy_vec = np.zeros(TurnMaxNumber)
+                    energy_vec = np.zeros(TurnMaxNumber)
                     board.run_simulation(
                         TurnMaxNumber,
-                        time_in_target_callback,
+                        tfas_turn_callback,
                         CallbackGlobals.COUNTER,
-                        entropy_vec
+                        entropy_vec,
+                        energy_vec,
+                        num_targets,
+                        mu,
+                        j,
+                        results_dir,
+                        run_indexz
+
                     )
                     # The first index is the number of time steps. dt is considered 1. turns instead of time constant. Counter is counting the number of turns. This is a possible to print to the user.
                     # The second index is what you want to simulation to do, IMPORTANT. this is a function. All the function possibilities are written above. If in the future we want to add another model
@@ -97,7 +114,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                         + str(int(num_targets) )
                         + ".mat"
                     )
-                    savemat(name, {"foo": entropy_vec})
+                    savemat(results_dir + name, {"foo": entropy_vec})
                     name: str = (
                             "distance_vec"
                             + "_mu_"
@@ -110,14 +127,27 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                             + str(int(num_targets))
                             + ".mat"
                     )
-                    savemat(name, {"foo": board.distance_vec})
+                    savemat(results_dir + name, {"foo": board.distance_vec})
+                    name: str = (
+                            "energy_vec"
+                            + "_mu_"
+                            + str(int(mu))
+                            + "_run_num_"
+                            + str(int(run_index) + 1)
+                            + "_num_target_"
+                            + str(int(j) + 1)
+                            + "_total_num_target_"
+                            + str(int(num_targets))
+                            + ".mat"
+                    )
+                    savemat(results_dir + name, {"foo":energy_vec})
 
 
 if __name__ == "__main__":
     # This is a check for number of different targets done for the project. This is a Python syntax, for if I ran this file as main.
     # What would happen if you run this inside python sledom and not outside.
     num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
-    num_targets_list = [1]
+    num_targets_list = [2]
     # Changing the number of targets.
     arg_list = []
     with open(CFG_FILE, "r") as f_cfg:

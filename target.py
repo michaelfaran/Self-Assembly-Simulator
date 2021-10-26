@@ -15,6 +15,7 @@ class Target(object):
         self.weak_interaction = weak_interaction
         self.strong_interaction = strong_interaction
         self.local_drive = local_drive
+        #self.previous_particles_grid = self.particles_grid
 
     def build_adjacency_matrix(self, particles: np.ndarray, enconding_factor: int) -> np.ndarray:
         num_of_particles = particles.size
@@ -33,13 +34,16 @@ class Target(object):
                 adjacency_matrix[particles[x][y]][particles[x][y]] = self.id * (enconding_factor + 1)
 
         return adjacency_matrix
-
+#adding a smart choice of target
     def build_particles_grid(self, num_of_particles):
         if num_of_particles != math.sqrt(num_of_particles) ** 2:
             raise NonSquareParticlesNumber()
         array_length = int(num_of_particles ** 0.5)
         particles_list = [i for i in range(num_of_particles)]
         random.shuffle(particles_list)
+        #if self.previous_particles_grid in dir(self):
+         #   while self.previous_particles_grid:
+
         return np.array(particles_list).reshape(array_length, array_length)
 
     def get_energy(self, p1: int, p2: int):
@@ -55,3 +59,5 @@ class Target(object):
 
     def are_neighboors_in_target(self, p1, p2):
         return 1 if self.adjacency_matrix[p1][p2] != -1 else 0
+
+

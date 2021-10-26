@@ -9,6 +9,7 @@ from particle import Particle
 from target import Target
 from copy import copy
 import matplotlib.pyplot as plt
+import os
 
 
 neighbor_directions = {"right": (0, 1), "left": (0, -1), "up": (-1, 0), "down": (1, 0)}
@@ -82,15 +83,19 @@ def add_coordinates(
 
     raise IndexError  # if coordinate not in bounds
 
-
+'''
 def show_grid(
     grid: np.ndarray,
     particles: List[Particle],
     inner_states_number: int,
-    save_fig: bool = False,
+    save_fig: bool = True,
     filename: str = "fig.png",
     title: str = "Simulation Snapshot",
 ):
+    script_dir = os.path.dirname(__file__)
+    results_dir = os.path.join(script_dir, 'Results/')
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
     palette = copy(plt.get_cmap("tab20", inner_states_number))
     palette.set_under("white", 1.0)
 
@@ -122,9 +127,158 @@ def show_grid(
     # fig.colorbar(plot)
     cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
     if save_fig:
-        plt.savefig(filename)
+        plt.savefig(results_dir + filename)
     # plt.show()
     plt.close("all")
+
+'''
+def show_grid(
+    grid: np.ndarray,
+    particles: List[Particle],
+    inner_states_number: int,
+    turn_num: int,
+    mu: int,
+    j: int,
+    run_indexz: int,
+    results_dir,
+    save_fig: bool = True,
+    filename: str = "fig.png",
+    title: str = "Simulation Snapshot",
+
+):
+    script_dir = os.path.dirname(__file__)
+  #  results_dir = os.path.join(script_dir, 'Results/')
+  #  if not os.path.isdir(results_dir):
+  #      os.makedirs(results_dir)
+    palette = copy(plt.get_cmap("tab20", inner_states_number))
+    palette.set_under("white", 1.0)
+
+    inner_states_matrix = np.full((grid.shape[0], grid.shape[1]), -1, int)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                inner_states_matrix[x][y] = particles[grid[x][y]].inner_state
+    fig, ax = plt.subplots()
+    plot = ax.imshow(
+        inner_states_matrix, cmap=palette, vmin=-0.5, vmax=inner_states_number - 0.5
+    )
+    ax.set_xticks(np.arange(0, grid.shape[0], 1))
+    ax.set_yticks(np.arange(0, grid.shape[1], 1))
+    ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
+    ax.set_yticklabels(np.arange(0, grid.shape[1], 1))
+    ax.set_xticks(np.arange(-0.5, grid.shape[0], 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, grid.shape[1], 1), minor=True)
+    ax.grid(which="minor", color="black", linestyle="-", linewidth=2)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                id = grid[x][y]
+                inner_state = particles[id].inner_state
+                # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
+                lbl = f"{id}"
+                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+    plt.title(title)
+    # fig.colorbar(plot)
+    cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
+    if save_fig:
+        plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) + ".png")
+    # plt.show()
+    plt.close("all")
+
+def show_grid2(
+    grid: np.ndarray,
+    particles: List[Particle],
+    inner_states_number: int,
+    turn_num: int,
+    mu: int,
+    j: int,
+    adjacency_matrix_encoding_factor: int,
+    run_indexz: int,
+    adjacency_matrix: np.ndarray,
+    target_matrix: np.ndarray,
+    results_dir,
+    save_fig: bool = True,
+    filename: str = "fig.png",
+    title: str = "Simulation Snapshot",
+
+):
+    script_dir = os.path.dirname(__file__)
+  #  results_dir = os.path.join(script_dir, 'Results/')
+  #  if not os.path.isdir(results_dir):
+  #      os.makedirs(results_dir)
+    palette = copy(plt.get_cmap("tab20", inner_states_number))
+    palette.set_under("white", 1.0)
+    inner_states_matrix = np.full((grid.shape[0], grid.shape[1]), -1, int)
+    coordinates_gridold = np.zeros((grid.shape[0]*grid.shape[1], 2))
+    coordinates_grid = coordinates_gridold.astype(np.int)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                inner_states_matrix[x][y] = particles[grid[x][y]].inner_state
+                coordinates_grid[grid[x][y]] = [ x , y ]
+                #coordinates_grid[grid[x][y], 2] = y
+    fig, ax = plt.subplots()
+    plot = ax.imshow(
+        inner_states_matrix, cmap=palette, vmin=-0.5, vmax=inner_states_number - 0.5
+    )
+    ax.set_xticks(np.arange(0, grid.shape[0], 1))
+    ax.set_yticks(np.arange(0, grid.shape[1], 1))
+    ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
+    ax.set_yticklabels(np.arange(0, grid.shape[1], 1))
+    ax.set_xticks(np.arange(-0.5, grid.shape[0], 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, grid.shape[1], 1), minor=True)
+    ax.grid(which="minor", color="black", linestyle="-", linewidth=2)
+    lett = np.shape(adjacency_matrix)
+    let = lett[1]
+    #neighbors_mat = zeros(let,4)-1
+    #count = zeros(let,1)
+    connection_coordiantesx = 0
+    connection_coordiantesy = 0
+    v = 0
+
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                id = grid[x][y]
+                inner_state = particles[id].inner_state
+                # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
+                lbl = f"{id}"
+                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+    cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
+    for xx in range(let):
+        # statesituation = checkstateofparticlein[adjacency_matrix(xx, xx)]
+        # statesituation2 = checkstateofparticlein[target(xx, xx)]
+        # a = adjacency_matrix[xx, xx]
+        # aa = adjacency_matrix[xx, xx] - adjacency_matrix_encoding_factor * adjacency_matrix[xx, xx] / (
+        #  adjacency_matrix_encoding_factor + 1)
+        if adjacency_matrix[xx, xx] - adjacency_matrix_encoding_factor * adjacency_matrix[xx, xx] / (
+                adjacency_matrix_encoding_factor + 1) == j:
+            for yy in range(let):
+                # aa = adjacency_matrix[xx, yy]- adjacency_matrix_encoding_factor*adjacency_matrix[xx, xx]/(adjacency_matrix_encoding_factor+1)
+                d = not yy == xx
+                if (adjacency_matrix[xx, yy] - adjacency_matrix_encoding_factor * adjacency_matrix[xx, xx] / (
+                        adjacency_matrix_encoding_factor + 1) == j) & d:
+                    a = not (adjacency_matrix[xx, yy] == -1)
+                    # b =  ~adjacency_matrix[xx, yy]
+                    if (adjacency_matrix[xx, yy] - target_matrix[xx, yy] == 0) & a:
+                        asf = (coordinates_grid[xx, 0] + coordinates_grid[yy, 0]) / 2
+                        connection_coordiantesx = (coordinates_grid[xx, 0] + coordinates_grid[yy, 0]) / 2
+                        connection_coordiantesy = (coordinates_grid[xx, 1] + coordinates_grid[yy, 1]) / 2
+                        # count(xx)=count(xx)+1
+                        # neighbors_mat (xx ,count(xx)) = adjacency_matrix(xx, yy)
+                        v = 1
+                        plt.sca(ax)
+                        plt.plot(connection_coordiantesy, connection_coordiantesx, 'r-s', markersize=15)
+                        plt.xlim(-0.5, 4.5)
+                        plt.ylim(-0.5, 4.5)
+    plt.title(title)
+    # fig.colorbar(plot)
+
+    if save_fig:
+        plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) + ".png")
+    # plt.show()
+    plt.close("all")
+
 
 
 def save_distance_figure(name, arr):

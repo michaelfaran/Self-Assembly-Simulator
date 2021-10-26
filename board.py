@@ -40,6 +40,7 @@ class Board:
         self.current_target = -1
         self.time_in_target = -1
         self.entropy_add = 0
+        self.energy_add = 0
 
     # Each object in Python has self.attribute (same as field). In the class all is intetned.
     # This is from object oriented. Self inside the object is to say act on me. Each
@@ -91,6 +92,7 @@ class Board:
         """
         targets = []
         id = 0
+        freedist = 105 + 48
         for config in self.cfg.targets_cfg:
             for i in range(config.num_of_instances):
                 targets.append(
@@ -103,6 +105,20 @@ class Board:
                         self.adjacency_matrix_encoding_factor
                     )
                 )
+                if i != 0:
+                    if self.calc_distance_from_targetss(targets,i) < freedist:
+                        targets.append(
+                            Target(
+                                id,
+                                self.cfg.num_of_particles,
+                                config.weak_interaction,
+                                config.strong_interaction,
+                                config.local_drive,
+                                self.adjacency_matrix_encoding_factor
+                            )
+                        )
+
+
                 id += 1
         return targets
 
@@ -157,19 +173,31 @@ class Board:
         # Try physical move with Metropolis condition
         particle = random.choice(self.particles)
         # Chose another random particle
+        energy1 = self.energy_add
+        entropy1 = self.entropy_add
         self.state_change(particle)
+        entropy2 = self.entropy_add
+        energy2 = self.energy_add
+        self.entropy_add = entropy1 + entropy2
+        self.energy_add = energy1+energy2
         # Choose each one in random.
         # Add entropy.
         # Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec):
-        self.distance_vec = np.zeros(max_num_of_turns)
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec, energy_vec, num_targets, mu, j, results_dir, run_indexz):
+        self.distance_vec = np.zeros((max_num_of_turns , num_targets), int)
+        self.mu = mu
+        self.j = j
+        self.num_targets = num_targets
+        self.run_indexz = run_indexz
+        self.results_dir = results_dir
         distances = [self.cfg.num_of_particles ** 2]  # distance from targets along realization. bins of 5000-mean.
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 # if the callback says we should stop
                 entropy_vec[turn_num] = self.entropy_add
+                energy_vec[turn_num] = self.energy_add
                 #distance_vec[turn_num] = min(self.calc_distance_from_targets())
                 return entropy_vec
                 # break
@@ -177,13 +205,13 @@ class Board:
             #self.output_file.write("time in target: {}\n".format(self.time_in_targets))
             #print("time in target: {}\n".format(self.time_in_targets))
             #self.output_file.write("tfas: {}\n".format(turn_num))
-            #self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
+            self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
             #print("tfas: {}\n".format(turn_num))
             #print("minimum distance bin: {}\n".format(min(distances)))
             #utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph", distances)
            # distance_vec[turn_num] = min(self.calc_distance_from_targets())
             entropy_vec[turn_num] = self.entropy_add
-
+            energy_vec[turn_num] = self.energy_add
         turn_callback(self, turn_num, finished=True)
 
     def physical_move(self, particle: Particle) -> None:
@@ -226,7 +254,7 @@ class Board:
                     / utils.metropolis_part_1((new_energy - old_energy))
                 )
             )
-
+            self.energy_add = new_energy - old_energy
             # update adjacency matrix
             self.adjacency_matrix[:, particle.id] = -1
             # I will forget mine.
@@ -248,6 +276,8 @@ class Board:
         # if the move is rejected, we revert it
         self.do_move_particle(particle, old_coordinates)
         self.entropy_add = 0
+        self.energy_add = 0
+
         return
 
     def is_move_allowed(self, new_coordinates: Tuple[int]) -> bool:
@@ -321,11 +351,13 @@ class Board:
                     / utils.metropolis_part_1((new_energy - old_energy) - local_drive)
                 )
             )
+            self.energy_add = new_energy - old_energy
             return
 
         # if change rejected, revert state
         particle.inner_state = original_state
         self.entropy_add = 0
+        self.energy_add = 0
 
         return
 
@@ -348,6 +380,12 @@ class Board:
                 np.count_nonzero(self.adjacency_matrix != i.adjacency_matrix)
             )
 
+        return distances
+
+    def calc_distance_from_targetss(self,targets, i):
+        distances = 0
+        j = i-1
+        distances = np.count_nonzero(targets[i].adjacency_matrix != targets[j].adjacency_matrix)
         return distances
 
     def set_particles_at_target(self, coordinates, target_num):
