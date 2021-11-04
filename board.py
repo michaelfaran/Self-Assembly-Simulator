@@ -41,6 +41,10 @@ class Board:
         self.time_in_target = -1
         self.entropy_add = 0
         self.energy_add = 0
+        self.energy_add1 = 0
+        self.energy_add2 = 0
+        self.entropy_add1 = 0
+        self.entropy_add2 = 0
 
     # Each object in Python has self.attribute (same as field). In the class all is intetned.
     # This is from object oriented. Self inside the object is to say act on me. Each
@@ -178,8 +182,10 @@ class Board:
         self.state_change(particle)
         entropy2 = self.entropy_add
         energy2 = self.energy_add
-        self.entropy_add = entropy1 + entropy2
-        self.energy_add = energy1+energy2
+        self.entropy_add1 = entropy1
+        self.entropy_add2 = entropy2
+        self.energy_add1 = energy1
+        self.energy_add2 = energy2
         # Choose each one in random.
         # Add entropy.
         # Gets accsess to the board, and what turn number are we in.
@@ -196,8 +202,10 @@ class Board:
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 # if the callback says we should stop
-                entropy_vec[turn_num] = self.entropy_add
-                energy_vec[turn_num] = self.energy_add
+                entropy_vec[turn_num, 1] = self.entropy_add1
+                energy_vec[turn_num, 1] = self.energy_add1
+                entropy_vec[turn_num, 2] = self.entropy_add2
+                energy_vec[turn_num, 2] = self.energy_add2
                 #distance_vec[turn_num] = min(self.calc_distance_from_targets())
                 return entropy_vec
                 # break
@@ -210,8 +218,10 @@ class Board:
             #print("minimum distance bin: {}\n".format(min(distances)))
             #utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph", distances)
            # distance_vec[turn_num] = min(self.calc_distance_from_targets())
-            entropy_vec[turn_num] = self.entropy_add
-            energy_vec[turn_num] = self.energy_add
+            entropy_vec[turn_num] = (self.entropy_add1, self.entropy_add2)
+            energy_vec[turn_num] = (self.energy_add1, self.energy_add2)
+            #entropy_vec[turn_num, 2] = self.entropy_add2
+            #energy_vec[turn_num, 2] = self.energy_add2
         turn_callback(self, turn_num, finished=True)
 
     def physical_move(self, particle: Particle) -> None:

@@ -2,7 +2,7 @@ from datetime import datetime, date
 from board import Board
 from simulation_cfg import load_cfg, SimulationCfg
 import utils
-from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback
+from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback, tfas_turn_callback2
 import os
 # This is the options names for the simulations. put it inside next.
 from multiprocessing import Pool
@@ -79,11 +79,11 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                     # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                     # A new class is used here. This class reperestns the lattice and other things, also runs interations.
                     run_indexz= run_index
-                    entropy_vec = np.zeros(TurnMaxNumber)
-                    energy_vec = np.zeros(TurnMaxNumber)
+                    entropy_vec = np.zeros((TurnMaxNumber, 2))
+                    energy_vec = np.zeros((TurnMaxNumber, 2))
                     board.run_simulation(
                         TurnMaxNumber,
-                        tfas_turn_callback,
+                        tfas_turn_callback2,
                         CallbackGlobals.COUNTER,
                         entropy_vec,
                         energy_vec,
@@ -140,7 +140,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int):
                             + str(int(num_targets))
                             + ".mat"
                     )
-                    savemat(results_dir + name, {"foo":energy_vec})
+                    savemat(results_dir + name, {"foo": energy_vec})
 
 
 if __name__ == "__main__":
