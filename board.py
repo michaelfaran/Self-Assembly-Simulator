@@ -25,8 +25,8 @@ class Board:
     grid: np.ndarray
     # Array of dimenon n is created
     targets: List[Target]
-
-    def __init__(self, cfg, output_file, start_at_target=False):
+#Michael changed here 16/1
+    def __init__(self, cfg, output_file, start_at_target = False):
         # This is a function of the board. Each indented function is part of the class.
         self.output_file = output_file
         self.cfg = cfg
@@ -45,6 +45,8 @@ class Board:
         self.energy_add2 = 0
         self.entropy_add1 = 0
         self.entropy_add2 = 0
+        #michael adds here a total distance for average
+        self.total_dist = 0
 
     # Each object in Python has self.attribute (same as field). In the class all is intetned.
     # This is from object oriented. Self inside the object is to say act on me. Each
@@ -109,6 +111,7 @@ class Board:
                         self.adjacency_matrix_encoding_factor
                     )
                 )
+                #Michael add to add targets that are far one from another
                 if i != 0:
                     if self.calc_distance_from_targetss(targets,i) < freedist:
                         targets.append(
@@ -191,21 +194,28 @@ class Board:
         # Gets accsess to the board, and what turn number are we in.
         return turn_callback(self, turn_num)
 
-    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec, energy_vec, num_targets, mu, j, results_dir, run_indexz):
+    def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec, energy_vec, num_targets, mu, j, Ja, results_dir, run_indexz):
         self.distance_vec = np.zeros((max_num_of_turns , num_targets), int)
         self.mu = mu
         self.j = j
         self.num_targets = num_targets
         self.run_indexz = run_indexz
         self.results_dir = results_dir
+        self.strong_interaction = Ja
         distances = [self.cfg.num_of_particles ** 2]  # distance from targets along realization. bins of 5000-mean.
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
                 # if the callback says we should stop
                 entropy_vec[turn_num, 1] = self.entropy_add1
                 energy_vec[turn_num, 1] = self.energy_add1
-                entropy_vec[turn_num, 2] = self.entropy_add2
-                energy_vec[turn_num, 2] = self.energy_add2
+                try:
+                    entropy_vec[turn_num, 2] = self.entropy_add2
+                    energy_vec[turn_num, 2] = self.energy_add2
+                    pass
+                except:
+                    entropy_vec[turn_num, 1] = self.entropy_add2
+                    energy_vec[turn_num, 1] = self.energy_add2
+                    pass
                 #distance_vec[turn_num] = min(self.calc_distance_from_targets())
                 return entropy_vec
                 # break
@@ -213,7 +223,7 @@ class Board:
             #self.output_file.write("time in target: {}\n".format(self.time_in_targets))
             #print("time in target: {}\n".format(self.time_in_targets))
             #self.output_file.write("tfas: {}\n".format(turn_num))
-            self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
+            #self.output_file.write("minimum distance bin: {}\n".format(min(distances)))
             #print("tfas: {}\n".format(turn_num))
             #print("minimum distance bin: {}\n".format(min(distances)))
             #utils.save_distance_figure(f"j{self.targets[0].strong_interaction}r{run_index} distances_graph", distances)
@@ -242,7 +252,10 @@ class Board:
         )
         # This was chosen instead of just adding delta due to boundary conditions.
         if not self.is_move_allowed(new_coordinates):
+            self.entropy_add = 0
+            self.energy_add = 0
             return
+
         old_energy = self.calculate_particle_energy(particle)
         # All the energy of the particle contribution to total energy.
         old_coordinates = particle.get_coordinates()
@@ -397,6 +410,7 @@ class Board:
         j = i-1
         distances = np.count_nonzero(targets[i].adjacency_matrix != targets[j].adjacency_matrix)
         return distances
+
 
     def set_particles_at_target(self, coordinates, target_num):
         target_grid = self.targets[target_num].particles_grid

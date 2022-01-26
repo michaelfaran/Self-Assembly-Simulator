@@ -194,6 +194,7 @@ def show_grid2(
     j: int,
     adjacency_matrix_encoding_factor: int,
     run_indexz: int,
+    Ja: float,
     adjacency_matrix: np.ndarray,
     target_matrix: np.ndarray,
     results_dir,
@@ -275,7 +276,7 @@ def show_grid2(
     # fig.colorbar(plot)
 
     if save_fig:
-        plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) + ".png")
+        plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) +"_J_strong_" + str(float(Ja)) + ".png")
     # plt.show()
     plt.close("all")
 
