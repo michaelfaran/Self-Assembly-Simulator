@@ -2,7 +2,7 @@ from datetime import datetime, date
 from board import Board
 from simulation_cfg import load_cfg, SimulationCfg
 import utils
-from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback, tfas_turn_callback2
+from turn_callbacks import CallbackGlobals, time_in_target_callback, tfas_turn_callback, tfas_turn_callback2, seed_callback
 import os
 # This is the options names for the simulations. put it inside next.
 from multiprocessing import Pool
@@ -14,6 +14,7 @@ import math
 import re
 #
 import random
+import gzip
 
 
 CFG_FILE = "cfg.json"
@@ -56,11 +57,11 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 7)
-        RunMax = 3
+        TurnMaxNumber = 5 * (10 ** 2)
+        RunMax = 2
         #20
         unitt = 1
-        muMax = 1
+        muMax = 3
         muMin = 0
         unittt = 2
         JMin =int(6.5*unittt)
@@ -106,7 +107,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                         current_time = now.strftime("%H:%M:%S")
                         outfile.write(f"start time: {current_time}\n")
                         board = Board(
-                            cfg, outfile, start_at_target = 0)  # Start at target 0, not random!!!
+                            cfg, outfile, start_at_target=0, seed_pivot= 1)  # Start at target 0, not random!!!
                         # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                         # A new class is used here. This class reperestns the lattice and other things, also runs interations.
                         run_indexz= run_index
@@ -114,7 +115,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                         energy_vec = np.zeros((TurnMaxNumber, 2))
                         board.run_simulation(
                             TurnMaxNumber,
-                            time_in_target_callback,
+                            seed_callback,
                             CallbackGlobals.COUNTER,
                             entropy_vec,
                             energy_vec,
@@ -123,8 +124,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                             j,
                             Ja,
                             results_dir,
-                            run_indexz
-
+                            run_indexz,
                         )
                         #tfas_turn_callback instead of time_in_target_callback, start at target= false usually
 
@@ -136,6 +136,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                         current_time = now.strftime("%H:%M:%S")
                         outfile.write(f"end time: {current_time}\n\n")
                         outfile.flush()
+
                         name: str = (
                             "entropy_vec"
                             + "_mu_"
@@ -148,7 +149,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                             + str(int(num_targets) )
                             + ".mat"
                         )
-                        #savemat(results_dir + name, {"foo": entropy_vec})
+                        savemat(results_dir + name, {"foo": entropy_vec}, do_compression=True)
                         name: str = (
                                 "distance_vec"
                                 + "_mu_"
@@ -161,7 +162,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                                 + str(int(num_targets))
                                 + ".mat"
                         )
-                        #savemat(results_dir + name, {"foo": board.distance_vec})
+                        savemat(results_dir + name, {"foo": board.distance_vec}, do_compression=True)
                         name: str = (
                                 "energy_vec"
                                 + "_mu_"
@@ -174,7 +175,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                                 + str(int(num_targets))
                                 + ".mat"
                         )
-                        #savemat(results_dir + name, {"foo": energy_vec})`
+                        savemat(results_dir + name, {"foo": energy_vec}, do_compression=True)
 
 
 if __name__ == "__main__":
@@ -182,8 +183,8 @@ if __name__ == "__main__":
     # What would happen if you run this inside python sledom and not outside.
     num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
     num_targets_list = [1,2,3,4]
-    #num_targets_list = [2]
-    num_of_runs_per_one = [1,2,3,4,5,6]
+    num_targets_list = [2]
+    num_of_runs_per_one = [1,2,3,4,5,6,7,8,9,10,11,12]
     #num_targets_list = [2]
     #num_of_runs_per_one = [1]
     # Changing the number of targets.

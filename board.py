@@ -26,16 +26,30 @@ class Board:
     # Array of dimenon n is created
     targets: List[Target]
 #Michael changed here 16/1
-    def __init__(self, cfg, output_file, start_at_target = False):
+    def __init__(self, cfg, output_file, start_at_target = False, seed_pivot = 0):
         # This is a function of the board. Each indented function is part of the class.
         self.output_file = output_file
         self.cfg = cfg
+        self.listed = np.zeros((self.cfg.num_of_particles , 1), int)
         self.adjacency_matrix_encoding_factor = 10 ** (math.floor(math.log10(self.get_num_of_targets())) + 1)
         self.targets = self.initialize_targets()
-        self.particles = self.initialize_particles_list(start_at_target)
-        self.grid = self.initialize_grid(
-            cfg.length, cfg.num_of_particles, start_at_target
-        )
+        if seed_pivot == 1:
+            self.particles = self.initialize_particles_list(start_at_target)
+            self.grid = self.initialize_grid_seed(
+                cfg.length, cfg.num_of_particles, start_at_target
+            )
+            self.update_particles_list_seed(start_at_target)
+            #self. initialize_image_grid_seed(
+             #   cfg.length, cfg.num_of_particles, start_at_target
+            #)
+            self.image_grid = self.initialize_grid_image_seed(cfg.length)
+            self.seed_matrix = self.initizalize_seed_matrix(self.adjacency_matrix_encoding_factor)
+            self.seed_pivot = 1
+        else:
+            self.particles = self.initialize_particles_list(start_at_target)
+            self.grid = self.initialize_grid(
+                cfg.length, cfg.num_of_particles, start_at_target
+            )
         self.adjacency_matrix = self.initizalize_adjacency_matrix(self.adjacency_matrix_encoding_factor)
         self.current_target = -1
         self.time_in_target = -1
@@ -76,6 +90,65 @@ class Board:
             self.particles[i].x, self.particles[i].y = x, y
         return grid
 
+    def initialize_grid_seed(self, length: int, num_of_particles: int, start_at_target):
+        """
+        Initializes grid.
+        Gets list of particles, and randomly populates them in the grid.
+        Not necessraly random for start at target if given start a traget NUMBER.
+        Returns the grid.
+        """
+
+        grid = np.full(
+            (length, length), -1, int
+        )  # Particle slots, -1 represents no particle, intialzation of grid with -1, no particle definition.
+        coordinates = [
+            (i, j) for i in range(length) for j in range(length)
+        ]  # Coordinates set, prepares list of coordinates.
+
+        #random.shuffle(coordinates)
+        # Shuffle the coordinates.
+        if start_at_target is False:
+            self.set_particles_at_target_seed(coordinates, 0)
+        # Shuffle the coordinates.
+        else:
+            self.set_particles_at_target_seed(coordinates, start_at_target)
+
+
+        for i in range(num_of_particles):
+            x, y = coordinates[i]
+            grid[x][y] = i
+            self.particles[i].x, self.particles[i].y = x, y
+        self.targets[start_at_target].particles_grid = self.target_original
+
+        return grid
+
+    def initialize_grid_image_seed(self, length: int):
+        """
+        Initializes grid.
+        Gets list of particles, and randomly populates them in the grid.
+        Not necessraly random for start at target if given start a traget NUMBER.
+        Returns the grid.
+        """
+        particles_super_saiyan = []
+        mapping_vec = np.zeros((self.cfg.num_of_particles, 1), int)-1
+        num_par_ss = 0
+        for i in range(self.cfg.num_of_particles):
+            er = self.listedd[i]
+            if er.item() == 1:
+                particles_super_saiyan.append(self.particles[i])
+                num_par_ss = num_par_ss + 1
+        image_grid = np.full(
+            (length, length), -1, int
+        )  # Particle slots, -1 represents no particle, intialzation of grid with -1, no particle definition.
+
+        for i in range(num_par_ss):
+            image_grid[particles_super_saiyan[i].x][particles_super_saiyan[i].y] = particles_super_saiyan[i].id
+            mapping_vec[i] = particles_super_saiyan[i].id
+        self.num_par_ss = num_par_ss
+        self. particles_super_saiyan = particles_super_saiyan
+        self.mapping_vec = mapping_vec
+        return image_grid
+
     def get_num_of_targets(self):
         num_of_targets = 0
         for config in self.cfg.targets_cfg:
@@ -89,8 +162,11 @@ class Board:
                 Particle(i, random.randrange(0, len(self.targets)))
                 for i in range(self.cfg.num_of_particles)
             ]
-
         return [Particle(i, start_at_target) for i in range(self.cfg.num_of_particles)]
+
+
+
+
 
     def initialize_targets(self) -> List[Target]:
         """
@@ -411,6 +487,16 @@ class Board:
         distances = np.count_nonzero(targets[i].adjacency_matrix != targets[j].adjacency_matrix)
         return distances
 
+    def calc_distance_from_seed(self):
+
+        distances = []
+
+        ssss = np.where(~(self.seed_matrix == 0 | np.eye(self.seed_matrix.shape[0], dtype=bool)),
+                        self.adjacency_matrix, -10)
+        wssss = np.where(ssss == -10)
+        Tattva = self.adjacency_matrix[wssss]
+        distances = np.size(np.where(Tattva != -1))
+        return distances
 
     def set_particles_at_target(self, coordinates, target_num):
         target_grid = self.targets[target_num].particles_grid
@@ -421,4 +507,122 @@ class Board:
                 coordinates[target_grid[i][j]] = (i, j)
 
 
+    def set_particles_at_target_seed(self, coordinates, target_num):
+        target_grid = self.targets[target_num].particles_grid
+        self.seed_grid = target_grid
+        mem = target_grid.tolist()
+        particles_array_length = int(self.cfg.num_of_particles ** 0.5)
+        powerhouse = self.cfg.seed_matrix
+        #occupied list
+        argg_list=[]
+        self.listedd = np.zeros((self.cfg.num_of_particles , 1), int)
+        self.schindler = self.listedd
+        for i in range(particles_array_length):
+            for j in range(particles_array_length):
+                if powerhouse[i][j] == 2:
+                    midd = (i + 0.5 * (np.sqrt(len(coordinates))-2)-1, j + 0.5 * (np.sqrt(len(coordinates))-2)-1)
+                    middd = (int(midd[0]), int(midd[1]))
+                    coordinates[target_grid[i][j]] = middd
+                    #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
+                    argg_list.append([i, j])
+                    self.listedd[target_grid[i][j]] = 1
+                    self.schindler[target_grid[i][j]] = 1
+                elif powerhouse[i][j] == 1:
+                    midd = (i + 0.5 *
+                            (np.sqrt(len(coordinates))), j +  0.5 * (np.sqrt(len(coordinates)))-1)
+                    middd = (int(midd[0]), int(midd[1]))
+                    coordinates[target_grid[i][j]] = middd
+                    #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
+                    argg_list.append([i, j])
+                    self.schindler[target_grid[i][j]] = 1
+        for i in range(particles_array_length):
+            for j in range(particles_array_length):
+                if (powerhouse[i][j] != 1) & (powerhouse[i][j] != 2):
+                    #self.seed_grid[i][j] = -1
+                    coordinates[target_grid[i][j]] = (
+                        random.randrange(0, self.cfg.length), random.randrange(0, self.cfg.length))
+                    while True in (ele == coordinates[target_grid[i][j]] for ele in argg_list):
+                        coordinates[target_grid[i][j]] = (random.randrange(0, self.cfg.length), random.randrange(0, self.cfg.length))
+        #self.schindler = argg_list
+        #y = [i[j] for i in coordinates for j in range(len(i))]
+        #coordinates = y
+        self.target_original = np.array(mem)
+
+    def update_particles_list_seed(self, start_at_target):
+        mark = np.zeros((self.cfg.num_of_particles), int)
+        for i in range(self.cfg.num_of_particles):
+            er = self.listedd[i]
+            if er.item() == 1:
+                mark[i] = start_at_target
+            else:
+                try:
+                    mark[i] = random.randrange(0, len(self.targets))
+                except:
+                    print("Oops!  That was no valid number.  Try again...")
+
+        mark = mark.astype(int)
+        for i in range(self.cfg.num_of_particles):
+            self.deterministic_state_change(mark[i].item(), self.particles[i])
+
+
+        #return [Particle.inner_state(i, mark[i].item()) for i in range(self.cfg.num_of_particles)]
+
+
+
+    def deterministic_state_change(self, new_state, particle: Particle):
+        """
+        Handles the inner state change attempt of a particle.
+        """
+
+        # if change rejected, revert state
+        particle.inner_state = new_state
+
+        return
 # If we choose to start in target, what types etc.
+
+    def initizalize_seed_matrix(self, encoding_factor):
+        adjacency_matrix = np.zeros(
+            (self.cfg.num_of_particles, self.cfg.num_of_particles), int
+        )
+        adjacency_matrix[:] = -1
+        # The default for no particle neighbour is -1
+        aaa = self.mapping_vec
+        aab = np.squeeze(aaa)
+        mapping_vec = aab.tolist()
+
+
+        for x in range(self.cfg.length):
+            for y in range(self.cfg.length):
+                if -1 == self.image_grid[x][y]:  # if no particle there.
+                    continue
+                neighbors = utils.get_neighboring_elements(
+                    self.image_grid, (x, y), self.cfg.is_cyclic
+                )
+                # boubdary conditions is defined in the grid configuration file. returns hashmap\dictionary.
+
+                #create mapping between element and id
+                try:
+                   # matches1 = [z for z in mapping_vec if z[0] == self.image_grid[x][y]]
+                    #element1 = matches1[0][0]
+                   #matches1 = mapping_vec(self.image_grid[x][y])
+                   element1 = mapping_vec.index(self.image_grid[x][y])
+                except:
+                    print("An exception occurred")
+                for direction, element in neighbors.items():
+                        #matches = mapping_vec( element.item())
+                        element2 = mapping_vec.index(element.item())
+                        try:
+                            adjacency_matrix[self.image_grid[x][y]][element] = (
+                            encoding_factor * self. particles_super_saiyan[element1].inner_state
+                            + self. particles_super_saiyan[element2].inner_state
+                            )
+                        except:
+                            print("An exception occurred")
+                adjacency_matrix[self.image_grid[x][y]][self.image_grid[x][y]] = (
+                    encoding_factor * self. particles_super_saiyan[element1].inner_state
+                    + self. particles_super_saiyan[element1].inner_state
+                )
+
+
+                # direction and element is extracting the matrix index in a location one by one and put it in the adjaency matrix.
+        return adjacency_matrix
