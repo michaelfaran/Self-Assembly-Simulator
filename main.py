@@ -57,7 +57,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 2)
+        TurnMaxNumber = 5 * (10 ** 0)
         RunMax = 2
         #20
         unitt = 1

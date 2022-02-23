@@ -118,7 +118,10 @@ class Board:
             x, y = coordinates[i]
             grid[x][y] = i
             self.particles[i].x, self.particles[i].y = x, y
+        # was
         self.targets[start_at_target].particles_grid = self.target_original
+        #for target_num in range(self.config.num_of_instances):
+         #   self.targets[target_num].particles_grid = self.target_original[target_num]
 
         return grid
 
@@ -134,7 +137,8 @@ class Board:
         num_par_ss = 0
         for i in range(self.cfg.num_of_particles):
             er = self.listedd[i]
-            if er.item() == 1:
+            #was if condition er.item() == 1
+            if er.item() != 0:
                 particles_super_saiyan.append(self.particles[i])
                 num_par_ss = num_par_ss + 1
         image_grid = np.full(
@@ -508,52 +512,111 @@ class Board:
 
 
     def set_particles_at_target_seed(self, coordinates, target_num):
+        #we will define the target grid by target_num
+        #mem = self.targets[target_num].particles_grid
+        #for i in range (self.config.num_of_instances):
+         #   target_grid = self.targets[i].particles_grid
+          #  mem[i] = target_grid.tolist()
         target_grid = self.targets[target_num].particles_grid
-        self.seed_grid = target_grid
-        mem = target_grid.tolist()
         particles_array_length = int(self.cfg.num_of_particles ** 0.5)
         powerhouse = self.cfg.seed_matrix
+        #3 shuffles the wanted particles with the 2, so we will know for sure
+
+        self.seed_grid = target_grid
+        mem = target_grid.tolist()
+        #particles_array_length = int(self.cfg.num_of_particles ** 0.5)
+        #powerhouse = self.cfg.seed_matrix
         #occupied list
-        argg_list=[]
+        argg_list = []
         self.listedd = np.zeros((self.cfg.num_of_particles , 1), int)
-        self.schindler = self.listedd
+        self.schindler = []
+        self.schindler3 = []
+
         for i in range(particles_array_length):
             for j in range(particles_array_length):
-                if powerhouse[i][j] == 2:
+                #was powerhouse[i][j] == 2 in if condition, this decides the non random fate of particles at the target grid states, but still on the target grid
+                if powerhouse[i][j] % 10 != powerhouse[i][j] and (powerhouse[i][j] != 0):
                     midd = (i + 0.5 * (np.sqrt(len(coordinates))-2)-1, j + 0.5 * (np.sqrt(len(coordinates))-2)-1)
                     middd = (int(midd[0]), int(midd[1]))
                     coordinates[target_grid[i][j]] = middd
                     #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
                     argg_list.append([i, j])
-                    self.listedd[target_grid[i][j]] = 1
-                    self.schindler[target_grid[i][j]] = 1
+                    self.listedd[target_grid[i][j]] = int((powerhouse[i][j]-powerhouse[i][j] % 10)/10)
+                    #self.schindler[target_grid[i][j]] = 1
+                    #self.schindler.append(target_grid[i][j])
+
+                #probably not commonly used the following one, its meaning is still in the target greed of 1, but start with random inital condition
                 elif powerhouse[i][j] == 1:
-                    midd = (i + 0.5 *
-                            (np.sqrt(len(coordinates))), j +  0.5 * (np.sqrt(len(coordinates)))-1)
+                    #midd = (i + 0.5 *
+                      #      (np.sqrt(len(coordinates))), j +  0.5 * (np.sqrt(len(coordinates)))-1)
+                    midd = (
+                    i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1, j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
                     middd = (int(midd[0]), int(midd[1]))
                     coordinates[target_grid[i][j]] = middd
                     #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
                     argg_list.append([i, j])
-                    self.schindler[target_grid[i][j]] = 1
+                    #self.schindler[target_grid[i][j]] = 1
+                    #self.schindler.append(target_grid[i][j])
+                    #Will probably be used, start at another state, still in the target e want, but its location will be randomized with other coordinates from the target grid, hence starting from a complicated seed most common scenario
+                elif powerhouse[i][j] == 2:
+                    #midd = (i + 0.5 *
+                     #       (np.sqrt(len(coordinates))), j + 0.5 * (np.sqrt(len(coordinates)))-1)
+                    midd = (
+                    i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1, j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
+                    middd = (int(midd[0]), int(midd[1]))
+                    coordinates[target_grid[i][j]] = middd
+                    #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
+                    argg_list.append([i, j])
+                    self.schindler.append(target_grid[i][j])
+                    #self.schindler[target_grid[i][j]] = int(target_grid[i][j])
+                elif powerhouse[i][j] == 3:
+                    #midd = (i + 0.5 *
+                     #       (np.sqrt(len(coordinates))), j + 0.5 * (np.sqrt(len(coordinates)))-1)
+                    #The Cucko method, hence all the 3 take here the place of 2 later on
+                    midd = (
+                    i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1, j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
+                    middd = (int(midd[0]), int(midd[1]))
+                    coordinates[target_grid[i][j]] = middd
+                    #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
+                    argg_list.append([i, j])
+                    self.schindler3.append(target_grid[i][j])
+                    #self.schindler[target_grid[i][j]] = int(target_grid[i][j])
         for i in range(particles_array_length):
             for j in range(particles_array_length):
-                if (powerhouse[i][j] != 1) & (powerhouse[i][j] != 2):
+                #was before (powerhouse[i][j] != 1) & (powerhouse[i][j] != 2), if powerhouse here is zero, just do not put it in the grid
+                if powerhouse[i][j] == 0:
                     #self.seed_grid[i][j] = -1
                     coordinates[target_grid[i][j]] = (
                         random.randrange(0, self.cfg.length), random.randrange(0, self.cfg.length))
                     while True in (ele == coordinates[target_grid[i][j]] for ele in argg_list):
                         coordinates[target_grid[i][j]] = (random.randrange(0, self.cfg.length), random.randrange(0, self.cfg.length))
-        #self.schindler = argg_list
+        new = self.schindler.copy()
+        new3 = self.schindler3.copy()
+        random.shuffle(new)
+        coordinates2 = coordinates.copy()
+        for i in range(len(self.schindler)):
+            coordinates[self.schindler[i]] = coordinates2[new[i]]
+        coordinates3 = coordinates.copy()
+        if len(self.schindler) > len(self.schindler3):
+            #here we swap between the 2 and the 3
+            for i in range(len(self.schindler3)):
+                coordinates[self.schindler[i]] = coordinates3[self.schindler3[i]]
+                coordinates[self.schindler3[i]] = coordinates3[self.schindler[i]]
+        # self.schindler = argg_list
         #y = [i[j] for i in coordinates for j in range(len(i))]
         #coordinates = y
         self.target_original = np.array(mem)
+        #for i in range(self.config.num_of_instances):
+         #   self.target_original[i] = np.array(mem[i])
 
     def update_particles_list_seed(self, start_at_target):
         mark = np.zeros((self.cfg.num_of_particles), int)
         for i in range(self.cfg.num_of_particles):
             er = self.listedd[i]
-            if er.item() == 1:
-                mark[i] = start_at_target
+            #was equal 1 in the if condition
+            if er.item() != 0:
+                mark[i] = self.listedd[i]-1
+                #mark[i] = start_at_target
             else:
                 try:
                     mark[i] = random.randrange(0, len(self.targets))
