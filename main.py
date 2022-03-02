@@ -57,7 +57,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 ** 0)
+        TurnMaxNumber = 5 * (10 **7)
         RunMax = 2
         #20
         unitt = 1
@@ -110,7 +110,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                             cfg, outfile, start_at_target=0, seed_pivot= 1)  # Start at target 0, not random!!!
                         # This is the initial target to start with, its name is 0. otherwise put false for totally random.
                         # A new class is used here. This class reperestns the lattice and other things, also runs interations.
-                        run_indexz= run_index
+                        run_indexz = run_index
                         entropy_vec = np.zeros((TurnMaxNumber, 2))
                         energy_vec = np.zeros((TurnMaxNumber, 2))
                         board.run_simulation(

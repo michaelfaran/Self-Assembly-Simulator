@@ -280,7 +280,60 @@ def show_grid2(
     # plt.show()
     plt.close("all")
 
+def show_grid3(
+    grid: np.ndarray,
+    particles: List[Particle],
+    inner_states_number: int,
+    turn_num: int,
+    mu: int,
+    j: int,
+    run_indexz: int,
+    Ja:float,
+    results_dir,
+    save_fig: bool = True,
+    filename: str = "fig.png",
+    title: str = "Simulation Snapshot",
 
+):
+    script_dir = os.path.dirname(__file__)
+  #  results_dir = os.path.join(script_dir, 'Results/')
+  #  if not os.path.isdir(results_dir):
+  #      os.makedirs(results_dir)
+    palette = copy(plt.get_cmap("tab20", inner_states_number))
+    palette.set_under("white", 1.0)
+
+    inner_states_matrix = np.full((grid.shape[0], grid.shape[1]), -1, int)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                inner_states_matrix[x][y] = particles[grid[x][y]].inner_state
+    fig, ax = plt.subplots()
+    plot = ax.imshow(
+        inner_states_matrix, cmap=palette, vmin=-0.5, vmax=inner_states_number - 0.5
+    )
+    ax.set_xticks(np.arange(0, grid.shape[0], 1))
+    ax.set_yticks(np.arange(0, grid.shape[1], 1))
+    ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
+    ax.set_yticklabels(np.arange(0, grid.shape[1], 1))
+    ax.set_xticks(np.arange(-0.5, grid.shape[0], 1), minor=True)
+    ax.set_yticks(np.arange(-0.5, grid.shape[1], 1), minor=True)
+    ax.grid(which="minor", color="black", linestyle="-", linewidth=2)
+    for x in range(grid.shape[0]):
+        for y in range(grid.shape[1]):
+            if grid[x][y] != -1:
+                id = grid[x][y]
+                inner_state = particles[id].inner_state
+                # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
+                lbl = f"{id}"
+                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+    plt.title(title)
+    # fig.colorbar(plot)
+    cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
+    if save_fig:
+       # plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) + ".png")
+        plt.savefig(results_dir + filename + "mu_" + str(int(mu)) + "_run_index_" + str(int(run_indexz)) + "_num_target_" + str(int(j)) + "_turn_number_" + str(int(turn_num)) + "_J_strong_" + str(float(Ja)) + ".png")
+    # plt.show()
+    plt.close("all")
 
 def save_distance_figure(name, arr):
     plt.clf()
