@@ -1,0 +1,83 @@
+%MoviemKaer
+close all
+a=dir(['C:\Users\admin\Documents\GitHub\GradProject\Results\10_10_2021_15_21_05' '/*.png']);
+out=size(a,1);
+out=4;
+name='State_mu_0_run_index_0_num_target_0';
+name1='Target_mu_0_run_index_0_num_target_0';
+name2='Target_mu_0_run_index_0_num_target_1';
+resolution=500000;
+v = VideoWriter('Try2.avi');
+axis tight manual 
+set(gca,'nextplot','replacechildren'); 
+v.FrameRate = 1;
+open(v);
+k=1;
+%burn the first
+imname=horzcat(name,'_turn_number_',num2str((k-1)*resolution),'.png');
+img = imread(imname);
+imshow(img);
+
+figure;
+subplot;
+plot(x,cumsum(foo23e.foo));%total energy
+
+
+for k=1:1:(out)
+imname=horzcat(name,'_turn_number_',num2str((k-1)*resolution),'.png');
+img = imread(imname);
+figure;
+imshow(img);
+a0=gcf;
+
+imname=horzcat(name1,'_turn_number_',num2str((k-1)*resolution),'.png');
+img1 = imread(imname);
+figure;
+imshow(img);
+a1=gcf;
+
+
+imname=horzcat(name2,'_turn_number_',num2str((k-1)*resolution),'.png');
+img2 = imread(imname);
+figure;
+imshow(img);
+a2=gcf;
+
+figure;
+newImg = cat(2,img1, img2);
+% newnewImg = cat(1,img,newImg);
+imshow(newImg);
+% savefig(horzcat(imname,'.fig'));
+% open(horzcat(imname,'.fig'));
+
+scrsz = get(groot, 'ScreenSize'); %Get screen size
+f = figure('Position', [scrsz(3)/10, scrsz(4)/5, scrsz(4)/2*2.4, scrsz(4)/2]); %Set figure position by screen size.
+positionVector1 = [0, 0.95-0.9, 0.9, 0.9]; %position vector for largest image.
+positionVector2 = [0.23+0.25, 0.95-0.7, 0.6, 0.7];
+ydrift=0;
+xdrift1=+0.015;
+x1=0.7;
+y1=0.7;
+x=0.3;
+y=0.3;
+positionVector1 = [0.5-0.5*x1+xdrift1, 0+ydrift+y, x1,y1];
+positionVector2 = [0.5-0.5*x, 0+1*y/6+ydrift, x, y];
+% positionVector3 = [0.555, 0.95-0.4, 0.4, 0.4];
+% positionVector4 = [0.775, 0.95-0.267, 0.267, 0.267]; %position vector for smallest image.
+axes(f, 'Position', positionVector1);
+imshow(img, 'border', 'tight');
+axes(f, 'Position', positionVector2);
+imshow(newImg, 'border', 'tight');
+set(gcf,'color','w');
+simulation=gcf;
+
+
+frame = getframe(gcf);
+writeVideo(v,frame);
+
+
+
+close(gcf);
+end
+    
+close(v)
