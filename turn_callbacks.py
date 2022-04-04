@@ -252,19 +252,39 @@ def seed_callback(board, turn_num, finished=False):
         board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot2))
         return
     say_cheese = 0
-    if board.seed_pivot == 1:
-        distance_from_seed = board.calc_distance_from_seed()
-        if distance_from_seed == 0:
-            board.seed_pivot = turn_num
-            say_cheese = 1
-    if board.seed_pivot2 == 1:
-        distance_from_seed2 = board.calc_distance_from_seed2()
-        if distance_from_seed2 == 0:
-            board.seed_pivot2 = turn_num
-            say_cheese = 1
-    distance_from_targets = board.calc_distance_from_targets()
-    board.distance_vec[turn_num] = min(distance_from_targets)
+    if turn_num % 1 == 0:
+        if board.seed_pivot == 1:
+            #distance_from_seed = board.calc_distance_from_seed()
+            distance_from_seed = board.seed_distance_pivot
+            if distance_from_seed == 0:
+                board.seed_pivot = turn_num
+                say_cheese = 1
+        if board.seed_pivot2 == 1:
+            #distance_from_seed2 = board.calc_distance_from_seed2()
+            distance_from_seed2 = board.seed_distance_pivot2
+            if distance_from_seed2 == 0:
+                board.seed_pivot2 = turn_num
+                say_cheese = 1
+
+        #distance_from_targets = board.calc_distance_from_targets()
+        #board.distance_pivot = distance_from_targets
+        distance_from_targets = board.distance_pivot
+
+
+        #board.distance_from_seed2_cand[turn_num] = board.seed_distance_pivot2
+        #board.distance_from_seed2_weapon[turn_num]= board.calc_distance_from_seed2()
+        #board.distance_from_seed_cand[turn_num] = board.seed_distance_pivot
+        #board.distance_from_seed_weapon[turn_num]= board.calc_distance_from_seed()
+    else:
+        distance_from_targets = board.distance_pivot
+
+    #board.distance_vec[turn_num] = min(distance_from_targets)
     board.distance_vec[turn_num] = distance_from_targets
+   # board.distance_vec2[turn_num] = board.distance_pivot
+    if turn_num == 0:
+        #board.distance_vec2[turn_num] = distance_from_targets
+        board.distance_from_seed2_cand[turn_num] = board.calc_distance_from_seed2()
+        board.distance_from_seed_cand[turn_num] = board.calc_distance_from_seed()
     if min(distance_from_targets) < CallbackGlobals.MIN_DISTANCE:
         CallbackGlobals.MIN_DISTANCE = min(distance_from_targets)
     board.total_dist = distance_from_targets[0] + board.total_dist

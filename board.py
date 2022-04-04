@@ -50,6 +50,7 @@ class Board:
             self.seed_matrix = self.initizalize_seed_matrix(self.adjacency_matrix_encoding_factor)
             self.seed_pivot = 1
             self.seed_pivot2 = 1
+            self.distance_pivot = 0
             #second pivot was added for the sake of checking when it detaches
             self.image_grid2 = self.initialize_grid_image_seed2(cfg.length)
             self.seed_matrix2 = self.initizalize_seed_matrix2(self.adjacency_matrix_encoding_factor)
@@ -67,9 +68,16 @@ class Board:
         self.energy_add2 = 0
         self.entropy_add1 = 0
         self.entropy_add2 = 0
+        self.distance_add = [0, 0]
+        self.distance_seed2_add = 0
+        self.distance_seed_add = 0
         #michael adds here a total distance for average
         self.total_dist = 0
-
+        self.distance_pivot = self.calc_distance_from_targets()
+        self.seed_distance_pivot = self.calc_distance_from_seed()
+        self.seed_distance_pivot2 = int(self.calc_distance_from_seed2())
+        #self.dist_tot = self.distance_pivot
+        #self.dist_tot2 = self.distance_pivot
     # Each object in Python has self.attribute (same as field). In the class all is intetned.
     # This is from object oriented. Self inside the object is to say act on me. Each
     def initialize_grid(self, length: int, num_of_particles: int, start_at_target):
@@ -298,15 +306,30 @@ class Board:
         # Try physical move with Metropolis condition
         particle = random.choice(self.particles)
         # Chose another random particle
+        distance1 = self.distance_add
+        distance_seed_1 = self.distance_seed_add
+        distance_seed2_1 =self.distance_seed2_add
         energy1 = self.energy_add
         entropy1 = self.entropy_add
         self.state_change(particle)
         entropy2 = self.entropy_add
         energy2 = self.energy_add
+        distance2 = self.distance_add
+        distance_seed_2 = self.distance_seed_add
+        distance_seed2_2 =self.distance_seed2_add
         self.entropy_add1 = entropy1
         self.entropy_add2 = entropy2
         self.energy_add1 = energy1
         self.energy_add2 = energy2
+        #self.distance_add = distance1
+        #self.distance_add2 = distance2
+        self.distance_pivot = list(np.array(distance2) + np.array(distance1)+ np.array(self.distance_pivot))
+        #self.seed_distance_pivot = list(np.array(distance2) + np.array(distance1)+ np.array(self.seed_distance_pivot))
+        self.seed_distance_pivot2 = (distance_seed2_2) + (distance_seed2_1)+ self.seed_distance_pivot2
+        self.seed_distance_pivot = (distance_seed_2) + (distance_seed_1)+ self.seed_distance_pivot
+
+        #self.dist_tot = self.dist_tot +list(np.array(distance1))
+        #self.dist_tot2 = self.dist_tot2 + list(np.array(distance2))
         # Choose each one in random.
         # Add entropy.
         # Gets accsess to the board, and what turn number are we in.
@@ -314,6 +337,11 @@ class Board:
 
     def run_simulation(self, max_num_of_turns, turn_callback, run_index, entropy_vec, energy_vec, num_targets, mu, j, Ja, results_dir, run_indexz):
         self.distance_vec = np.zeros((max_num_of_turns , num_targets), int)
+        #self.distance_vec2 = np.zeros((max_num_of_turns , num_targets), int)
+        self.distance_from_seed2_weapon =  np.zeros((max_num_of_turns , 1), int)
+        self. distance_from_seed2_cand =  np.zeros((max_num_of_turns , 1), int)
+        self.distance_from_seed_weapon =  np.zeros((max_num_of_turns , 1), int)
+        self. distance_from_seed_cand =  np.zeros((max_num_of_turns , 1), int)
         self.mu = mu
         self.j = j
         self.num_targets = num_targets
@@ -348,6 +376,7 @@ class Board:
            # distance_vec[turn_num] = min(self.calc_distance_from_targets())
             entropy_vec[turn_num] = (self.entropy_add1, self.entropy_add2)
             energy_vec[turn_num] = (self.energy_add1, self.energy_add2)
+
             #entropy_vec[turn_num, 2] = self.entropy_add2
             #energy_vec[turn_num, 2] = self.energy_add2
         turn_callback(self, turn_num, finished=True)
@@ -372,6 +401,10 @@ class Board:
         if not self.is_move_allowed(new_coordinates):
             self.entropy_add = 0
             self.energy_add = 0
+            self.distance_add = [0, 0]
+            self.distance_seed2_add = 0
+            self.distance_seed_add = 0
+
             return
 
         old_energy = self.calculate_particle_energy(particle)
@@ -387,6 +420,11 @@ class Board:
         )
         # Here we take all the new neihbours ot he particle. if the move is accepted, we keep it, and zero the neihgbors.
         kenb = utils.metropolis(-(new_energy - old_energy))
+        #michael add for distance update
+        #particle_id = particle.id
+        pre_dis = self.calc_distance_from_targets_advance(particle.id)
+        pre_dis_seed2 = self.calc_distance_from_seed2_advance(particle.id)
+        pre_dis_seed = self.calc_distance_from_seed_advance(particle.id)
         if utils.metropolis(-(new_energy - old_energy)):
             # add entropy of step
             self.entropy_add = math.log(
@@ -397,6 +435,9 @@ class Board:
             )
             self.energy_add = new_energy - old_energy
             # update adjacency matrix
+            hands_of_time = self.adjacency_matrix
+            all_good = hands_of_time.copy()
+            particle_id = particle.id
             self.adjacency_matrix[:, particle.id] = -1
             # I will forget mine.
             self.adjacency_matrix[particle.id, :] = -1
@@ -404,6 +445,7 @@ class Board:
             self.adjacency_matrix[particle.id][particle.id] = (
                 self.adjacency_matrix_encoding_factor * particle.inner_state + particle.inner_state
             )
+            #not sure the above is needed, since we do not change the aprticle state here
             # This is due to how we keep the particle and its neighbours new state in the neighbouring matrix. MIGHT BE REFACORTED.
             for n in new_neighbors.values():
                 self.adjacency_matrix[particle.id][n] = (
@@ -412,12 +454,25 @@ class Board:
                 self.adjacency_matrix[n][particle.id] = (
                     self.adjacency_matrix_encoding_factor * self.particles[n].inner_state + particle.inner_state
                 )
+             #Michael add distance calc shortcut 21.3.22
+
+            post_dis = self.calc_distance_from_targets_advance(particle.id)
+            self.distance_add = list(np.array(post_dis)- np.array(pre_dis))
+            post_dis_seed2 = self.calc_distance_from_seed2_advance(particle.id)
+            post_dis_seed = self.calc_distance_from_seed_advance(particle.id)
+            self.distance_seed2_add = (post_dis_seed2) - (pre_dis_seed2)
+            self.distance_seed_add = (post_dis_seed) - (pre_dis_seed)
+
             return
+
 
         # if the move is rejected, we revert it
         self.do_move_particle(particle, old_coordinates)
         self.entropy_add = 0
         self.energy_add = 0
+        self.distance_add = [0, 0]
+        self.distance_seed2_add = 0
+        self.distance_seed_add = 0
 
         return
 
@@ -477,6 +532,9 @@ class Board:
 
         # Check change probabilty and edit adjacency_matrix.
         kenb = utils.metropolis(-(new_energy - old_energy) + local_drive)
+        pre_dis = self.calc_distance_from_targets_advance(particle.id)
+        pre_dis_seed2 = self.calc_distance_from_seed2_advance(particle.id)
+        pre_dis_seed = self.calc_distance_from_seed_advance(particle.id)
         if utils.metropolis(-(new_energy - old_energy) + local_drive):
             for n in neighbors.values():
                 self.adjacency_matrix[particle.id][n] = (
@@ -493,13 +551,23 @@ class Board:
                 )
             )
             self.energy_add = new_energy - old_energy
+            hands_of_time = self.adjacency_matrix
+            all_good = hands_of_time.copy()
+            particle_id = particle.id
+            post_dis = self.calc_distance_from_targets_advance(particle.id)
+            self.distance_add = list(np.array(post_dis) - np.array(pre_dis))
+            post_dis_seed2 = self.calc_distance_from_seed2_advance(particle.id)
+            post_dis_seed = self.calc_distance_from_seed_advance(particle.id)
+            self.distance_seed2_add = (post_dis_seed2) - (pre_dis_seed2)
+            self.distance_seed_add = (post_dis_seed) - (pre_dis_seed)
             return
-
         # if change rejected, revert state
         particle.inner_state = original_state
         self.entropy_add = 0
         self.energy_add = 0
-
+        self.distance_add = [0, 0]
+        self.distance_seed2_add = 0
+        self.distance_seed_add = 0
         return
 
     def do_move_particle(self, particle, destination_coordinates):
@@ -514,6 +582,16 @@ class Board:
 
     # **The neibougring matrix are compared, due to rotation and transaltation symmetries.  A key point that might be troubl
     # some. To further explain the project book.
+
+    def calc_distance_from_targets_advance(self, particle_id) -> int:
+        distances_up = []
+        for i in self.targets:
+            distances_up.append(
+                2 *(np.count_nonzero(self.adjacency_matrix[particle_id] != i.adjacency_matrix[particle_id])) - (np.count_nonzero(self.adjacency_matrix[particle_id] [particle_id] != i.adjacency_matrix[particle_id][particle_id]))
+            )
+
+        return distances_up
+
     def calc_distance_from_targets(self):
         distances = []
         for i in self.targets:
@@ -523,7 +601,7 @@ class Board:
 
         return distances
 
-    def calc_distance_from_targetss(self,targets, i):
+    def calc_distance_from_targetss(self, targets, i):
         distances = 0
         j = i-1
         distances = np.count_nonzero(targets[i].adjacency_matrix != targets[j].adjacency_matrix)
@@ -540,10 +618,22 @@ class Board:
         distances = np.size(np.where(Tattva != -1))
         return distances
 
+    def calc_distance_from_seed_advance(self, particle_id) -> int:
+
+        distances_up = []
+        ssss = np.where(~(self.seed_matrix[particle_id] != -1),
+                        self.adjacency_matrix[particle_id], -10)
+        #ssss[np.eye(self.seed_matrix2[particle_id].shape[0], dtype=bool)] = 0
+        #ssss[particle_id] =0
+        wssss = np.where(ssss == -10)
+        Tattva = self.adjacency_matrix[particle_id][wssss]
+        distances_up =  2 *(np.size(np.where(Tattva != -1)))
+        #-(np.count_nonzero(self.adjacency_matrix[particle_id][particle_id] != self.seed_matrix2[particle_id][particle_id]))
+        return distances_up
+
     def calc_distance_from_seed2(self):
 
         distances = []
-
         ssss = np.where(~(self.seed_matrix2 != -1),
                         self.adjacency_matrix, -20)
         ssss[np.eye(self.seed_matrix2.shape[0], dtype=bool)] = 0
@@ -551,6 +641,19 @@ class Board:
         Tattva = self.adjacency_matrix[wssss]
         distances = np.size(np.where(Tattva != -1))
         return distances
+
+    def calc_distance_from_seed2_advance(self, particle_id) -> int:
+
+        distances_up = []
+        ssss = np.where(~(self.seed_matrix2[particle_id] != -1),
+                        self.adjacency_matrix[particle_id], -20)
+        #ssss[np.eye(self.seed_matrix2[particle_id].shape[0], dtype=bool)] = 0
+        ssss[particle_id] =0
+        wssss = np.where(ssss == -20)
+        Tattva = self.adjacency_matrix[particle_id][wssss]
+        distances_up =  2 *(np.size(np.where(Tattva != -1)))
+        #-(np.count_nonzero(self.adjacency_matrix[particle_id][particle_id] != self.seed_matrix2[particle_id][particle_id]))
+        return distances_up
 
     def set_particles_at_target(self, coordinates, target_num):
         target_grid = self.targets[target_num].particles_grid

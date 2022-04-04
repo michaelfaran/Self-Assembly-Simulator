@@ -57,7 +57,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 **0)
+        TurnMaxNumber = 5 * (10 **2)
         RunMax = 2
         #20
         unitt = 1
@@ -141,14 +141,14 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                             "entropy_vec"
                             + "_mu_"
                             + str(int(mu))
-                            + "_run_num_"
-                            + str(int(run_index) + 1)
-                            + "_num_target_"
-                            + str(int(j) + 1)
-                            +"_total_num_target_"
-                            + str(int(num_targets) )
                             +"_energy_"
                             + str(0.5 * int(Jaa))
+                            + "_run_num_"
+                            + str(int(run_index) + 1)
+                           # + "_num_target_"
+                           # + str(int(j) + 1)
+                            +"_total_num_target_"
+                            + str(int(num_targets))
                             + ".mat"
 
                         )
@@ -157,14 +157,14 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                                 "distance_vec"
                                 + "_mu_"
                                 + str(int(mu))
-                                + "_run_num_"
-                                + str(int(run_index) + 1)
-                                + "_num_target_"
-                                + str(int(j) + 1)
-                                + "_total_num_target_"
-                                + str(int(num_targets))
                                 + "_energy_"
                                 + str(0.5 *int(Jaa))
+                                + "_run_num_"
+                                + str(int(run_index) + 1)
+                               # + "_num_target_"
+                               # + str(int(j) + 1)
+                                + "_total_num_target_"
+                                + str(int(num_targets))
                                 + ".mat"
                         )
                         savemat(results_dir + name, {"foo": board.distance_vec}, do_compression=True)
@@ -172,32 +172,33 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                                 "energy_vec"
                                 + "_mu_"
                                 + str(int(mu))
-                                + "_run_num_"
-                                + str(int(run_index) + 1)
-                                + "_num_target_"
-                                + str(int(j) + 1)
-                                + "_total_num_target_"
-                                + str(int(num_targets))
                                 + "_energy_"
                                 + str(0.5 *int(Jaa))
+                                + "_run_num_"
+                                + str(int(run_index) + 1)
+                                #+ "_num_target_"
+                                #+ str(int(j) + 1)
+                                + "_total_num_target_"
+                                + str(int(num_targets))
                                 + ".mat"
                         )
+                        #number of target saved here out of ease
                         savemat(results_dir + name, {"foo": energy_vec}, do_compression=True)
-                        name: str = (
-                                "distance_vec2"
-                                + "_mu_"
-                                + str(int(mu))
-                                + "_run_num_"
-                                + str(int(run_index) + 1)
-                                + "_num_target_"
-                                + str(int(j) + 1)
-                                + "_total_num_target_"
-                                + str(int(num_targets))
-                                + "_energy_"
-                                + str(0.5 *int(Jaa))
-                                + ".mat"
-                        )
-                        savemat(results_dir + name, {"foo": board.distance_vec2}, do_compression=True)
+#                        name: str = (
+#                                "distance_vec2"
+#                                + "_mu_"
+#                                + str(int(mu))
+#                                + "_run_num_"
+#                                + str(int(run_index) + 1)
+#                                + "_num_target_"
+#                                + str(int(j) + 1)
+#                                + "_total_num_target_"
+#                                + str(int(num_targets))
+#                                + "_energy_"
+#                                + str(0.5 *int(Jaa))
+#                                + ".mat"
+#                        )
+#                        savemat(results_dir + name, {"foo": board.distance_vec2}, do_compression=True)
 
 
 
