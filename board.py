@@ -76,6 +76,7 @@ class Board:
         self.distance_pivot = self.calc_distance_from_targets()
         self.seed_distance_pivot = self.calc_distance_from_seed()
         self.seed_distance_pivot2 = int(self.calc_distance_from_seed2())
+        self.flagged = 0
         #self.dist_tot = self.distance_pivot
         #self.dist_tot2 = self.distance_pivot
     # Each object in Python has self.attribute (same as field). In the class all is intetned.

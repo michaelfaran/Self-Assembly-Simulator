@@ -244,12 +244,13 @@ def tfas_turn_callback2(board, turn_num, finished=False):
 def seed_callback(board, turn_num, finished=False):
     # finished is the last chance to keep variables before simulation ends. Conditions you want as results are below.
     if finished:
-        board.total_dist = board.total_dist/turn_num
-        board.output_file.write("tfas: {}\n".format(turn_num))
-        board.output_file.write("time in target: {}\n".format(board.time_in_target))
-        board.output_file.write("average distance: {}\n".format(board.total_dist))
-        board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot))
-        board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot2))
+        if board.flagged == 0:
+            board.total_dist = board.total_dist/turn_num
+            board.output_file.write("tfas: {}\n".format(turn_num))
+            board.output_file.write("time in target: {}\n".format(board.time_in_target))
+            board.output_file.write("average distance: {}\n".format(board.total_dist))
+            board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot))
+            board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot2))
         return
     say_cheese = 0
     if turn_num % 1 == 0:
@@ -292,8 +293,8 @@ def seed_callback(board, turn_num, finished=False):
         distance_from_targets.index(0) if 0 in distance_from_targets else -1
     )  # get the target with distance 0
     # Check if the system is now in a target
-
-    x = 50000000
+#the below was simulation length before
+    x = 1000000
     CallbackGlobals.COUNTER = turn_num
     if turn_num % x == 0 or say_cheese == 1:
 
@@ -335,14 +336,15 @@ def seed_callback(board, turn_num, finished=False):
     if turn_target == 0:
         board.time_in_target += 1
 
-    if 0 in distance_from_targets:  # If we are in some target - stop
+    if 0 in distance_from_targets and board.flagged == 0:  # If we are in some target - stop
         board.total_dist = board.total_dist / turn_num
         board.output_file.write("tfas: {}\n".format(turn_num))
         board.output_file.write("time in target: {}\n".format(board.time_in_target))
         board.output_file.write("average distance: {}\n".format(board.total_dist))
         board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot))
         board.output_file.write("seed disassemble time: {}\n".format(board.seed_pivot2))
-        return False
+        board.flagged = 1
+        #return False
     # Here we started with target 0, so we add to time in target 0 if we are in this target, o.w
     return True
     # If this is false, you break the simulation.

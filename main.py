@@ -57,16 +57,25 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5 * (10 **2)
-        RunMax = 2
+        TurnMaxNumber = 15* (10 **7)
+        big_flag = 1
+        res = 10**5
+        res_big = 3
+        #TurnMaxNumber = 10**2
+        #res = 10
+        RunMax = 1
         #20
         unitt = 1
-        muMax = 3
-        muMin = 0
+        muMax = 2
+        #3
+        muMin = 1
         unittt = 2
-        JMin =int(6.5*unittt)
-        JMax = 3*unittt
+        JMin =int(6*unittt)
+        JMin = 11
+        JMax = 5*unittt
+        #JMax = 9
         energy_step = 1
+
 #22
        #should I hide it?
         for Jaa in range(JMax,JMin):
@@ -131,6 +140,16 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                         # The first index is the number of time steps. dt is considered 1. turns instead of time constant. Counter is counting the number of turns. This is a possible to print to the user.
                         # The second index is what you want to simulation to do, IMPORTANT. this is a function. All the function possibilities are written above. If in the future we want to add another model
                         # it is possible by adding another name and file to this code.
+
+                        if big_flag == 1:
+                            ind_pos = range(0, TurnMaxNumber, res_big)
+                            #summed_energy_vec = np.cumsum(np.sum(energy_vec,1))
+                            #summed_entropy_vec = np.cumsum(np.sum(entropy_vec,1))
+                            #t_energy = energy_vec[ind_pos]
+                            entropy_vec = entropy_vec[ind_pos]
+                            energy_vec = energy_vec[ind_pos]
+                            board.distance_vec = board.distance_vec[ind_pos]
+
                         print("\nend run--------------\n")
                         now = datetime.now()
                         current_time = now.strftime("%H:%M:%S")
@@ -184,6 +203,7 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                         )
                         #number of target saved here out of ease
                         savemat(results_dir + name, {"foo": energy_vec}, do_compression=True)
+
 #                        name: str = (
 #                                "distance_vec2"
 #                                + "_mu_"
@@ -199,6 +219,68 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
 #                                + ".mat"
 #                        )
 #                        savemat(results_dir + name, {"foo": board.distance_vec2}, do_compression=True)
+                        try:
+                            ind_pos = range(0, TurnMaxNumber, res)
+                            summed_energy_vec = np.cumsum(np.sum(energy_vec,1))
+                            summed_entropy_vec = np.cumsum(np.sum(entropy_vec,1))
+                            t_energy = energy_vec[ind_pos]
+                            new_entropy = summed_entropy_vec[ind_pos]
+                            new_energy = summed_energy_vec[ind_pos]
+                            #new_entropy = np.cumsum(np.sum(t_entropy,1))
+                            new_distance = board.distance_vec[ind_pos]
+
+                            name: str = (
+                                    "mini_summed_entropy_vec"
+                                    + "_mu_"
+                                    + str(int(mu))
+                                    + "_energy_"
+                                    + str(0.5 * int(Jaa))
+                                    + "_run_num_"
+                                    + str(int(run_index) + 1)
+                                    # + "_num_target_"
+                                    # + str(int(j) + 1)
+                                    + "_total_num_target_"
+                                    + str(int(num_targets))
+                                    + ".mat"
+
+                            )
+                            savemat(results_dir + name, {"foo": new_entropy}, do_compression=True)
+                            name: str = (
+                                    "mini_summed_distance_vec"
+                                    + "_mu_"
+                                    + str(int(mu))
+                                    + "_energy_"
+                                    + str(0.5 * int(Jaa))
+                                    + "_run_num_"
+                                    + str(int(run_index) + 1)
+                                    # + "_num_target_"
+                                    # + str(int(j) + 1)
+                                    + "_total_num_target_"
+                                    + str(int(num_targets))
+                                    + ".mat"
+                            )
+                            savemat(results_dir + name, {"foo": new_distance}, do_compression=True)
+                            name: str = (
+                                    "mini_summed_energy_vec"
+                                    + "_mu_"
+                                    + str(int(mu))
+                                    + "_energy_"
+                                    + str(0.5 * int(Jaa))
+                                    + "_run_num_"
+                                    + str(int(run_index) + 1)
+                                    # + "_num_target_"
+                                    # + str(int(j) + 1)
+                                    + "_total_num_target_"
+                                    + str(int(num_targets))
+                                    + ".mat"
+                            )
+                            # number of target saved here out of ease
+                            savemat(results_dir + name, {"foo": new_energy}, do_compression=True)
+                        except:
+                            print("Oh my dear, something went  with the mini vectors")
+
+
+
 
 
 
