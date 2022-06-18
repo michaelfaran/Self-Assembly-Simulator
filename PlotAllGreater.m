@@ -3,8 +3,8 @@ cd(['C:\Users\admin\Documents\GitHub\GradProject\Results\04_19_2022_21_33_44-The
     '']);
 mainFolder = cd;
 addpath('C:\Users\admin\Documents\GitHub\GradProject\github_repo')
-energy_vec=4:0.5:5;
-drive_vec=2;
+energy_vec=4.5:0.5:5;
+drive_vec=1;
 
 for idi=1:1:length(energy_vec)
 

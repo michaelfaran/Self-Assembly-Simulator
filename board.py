@@ -349,6 +349,8 @@ class Board:
         self.run_indexz = run_indexz
         self.results_dir = results_dir
         self.strong_interaction = Ja
+        #self.output_file.write("check this run3")
+        self.output_file.flush()
         distances = [self.cfg.num_of_particles ** 2]  # distance from targets along realization. bins of 5000-mean.
         for turn_num in range(max_num_of_turns):
             if not self.turn(turn_num, turn_callback):
