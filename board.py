@@ -41,8 +41,8 @@ class Board:
             self.grid = self.initialize_grid_seed(
                 cfg.length, cfg.num_of_particles, start_at_target
             )
-            self.adjacency_matrix = self.initizalize_adjacency_matrix(self.adjacency_matrix_encoding_factor)
             self.update_particles_list_seed(start_at_target)
+            self.adjacency_matrix = self.initizalize_adjacency_matrix(self.adjacency_matrix_encoding_factor)
             #self. initialize_image_grid_seed(
              #   cfg.length, cfg.num_of_particles, start_at_target
             #)
@@ -125,10 +125,10 @@ class Board:
         #random.shuffle(coordinates)
         # Shuffle the coordinates.
         if start_at_target is False:
-            self.set_particles_at_target_seed(coordinates, 0)
+            self.set_particles_at_target_seed(coordinates, 0, self.cfg.like_a_boss_flag,self.cfg.one_more_flag)
         # Shuffle the coordinates.
         else:
-            self.set_particles_at_target_seed(coordinates, start_at_target)
+            self.set_particles_at_target_seed(coordinates, start_at_target, self.cfg.like_a_boss_flag,self.cfg.one_more_flag)
 
 
         for i in range(num_of_particles):
@@ -667,7 +667,7 @@ class Board:
                 coordinates[target_grid[i][j]] = (i, j)
 
 
-    def set_particles_at_target_seed(self, coordinates, target_num):
+    def set_particles_at_target_seed(self, coordinates, target_num, boss_flag, one_more_flag):
         #we will define the target grid by target_num
         #mem = self.targets[target_num].particles_grid
         #for i in range (self.config.num_of_instances):
@@ -694,6 +694,7 @@ class Board:
             for j in range(particles_array_length):
                 #was powerhouse[i][j] == 2 in if condition, this decides the non random fate of particles at the target grid states, but still on the target grid
                 if powerhouse[i][j] % 10 != powerhouse[i][j] and (powerhouse[i][j] != 0):
+                    """
                     midd = (i + 0.5 * (np.sqrt(len(coordinates))-2)-1, j + 0.5 * (np.sqrt(len(coordinates))-2)-1)
                     middd = (int(midd[0]), int(midd[1]))
                     coordinates[target_grid[i][j]] = middd
@@ -702,7 +703,7 @@ class Board:
                     self.listedd[target_grid[i][j]] = int((powerhouse[i][j]-powerhouse[i][j] % 10)/10)
                     #self.schindler[target_grid[i][j]] = 1
                     #self.schindler.append(target_grid[i][j])
-
+                    """
                 #probably not commonly used the following one, its meaning is still in the target greed of 1, but start with random inital condition
                 elif powerhouse[i][j] == 1:
                     #midd = (i + 0.5 *
@@ -720,12 +721,14 @@ class Board:
                     #midd = (i + 0.5 *
                      #       (np.sqrt(len(coordinates))), j + 0.5 * (np.sqrt(len(coordinates)))-1)
                     midd = (
-                    i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1, j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
+                        i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1,
+                        j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
                     middd = (int(midd[0]), int(midd[1]))
                     coordinates[target_grid[i][j]] = middd
                     #coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
                     #argg_list.append([i, j])
                     argg_list.append(middd)
+                    self.listedd2[target_grid[i][j]] = target_num+1
                     self.schindler.append(target_grid[i][j])
                     #self.schindler[target_grid[i][j]] = int(target_grid[i][j])
                 elif powerhouse[i][j] == 3:
@@ -740,6 +743,29 @@ class Board:
                     argg_list.append(middd)
                     self.schindler3.append(target_grid[i][j])
                     #self.schindler[target_grid[i][j]] = int(target_grid[i][j])
+
+        if one_more_flag == 1:
+                try:
+                    target_grid2 = self.targets[target_num+1].particles_grid
+                except:
+                    target_grid2 = self.targets[target_num-1].particles_grid
+                for i in range(particles_array_length):
+                    for j in range(particles_array_length):
+                        if powerhouse[i][j] % 10 != powerhouse[i][j] and (powerhouse[i][j] != 0):
+                            # midd = (i + 0.5 *
+                            #       (np.sqrt(len(coordinates))), j + 0.5 * (np.sqrt(len(coordinates)))-1)
+                            midd = (
+                                i + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1,
+                                j + 0.5 * (np.sqrt(len(coordinates)) - 2) - 1)
+                            middd = (int(midd[0]), int(midd[1]))
+                            if (target_grid2[i][j] in self.schindler)==0:
+                                coordinates[target_grid2[i][j]] = middd
+                                # coordinates[target_grid[i][j]] = (i + 0.5 * (np.sqrt(len(coordinates))-1), j + 0.5 * (np.sqrt(len(coordinates))-1))
+                                # argg_list.append([i, j])
+                                argg_list.append(middd)
+                                self.schindler.append(target_grid2[i][j])
+                                self.listedd2[target_grid2[i][j]] = int((powerhouse[i][j] - powerhouse[i][j] % 10) / 10)+1
+
         for i in range(particles_array_length):
             for j in range(particles_array_length):
                 #was before (powerhouse[i][j] != 1) & (powerhouse[i][j] != 2), if powerhouse here is zero, just do not put it in the grid
@@ -751,13 +777,23 @@ class Board:
                         nedw = (random.randrange(0, self.cfg.length), random.randrange(0, self.cfg.length))
 
                     argg_list.append(nedw)
-                    coordinates[target_grid[i][j]] = nedw
-                    self.schindler2.append(target_grid[i][j])
-                    self.listedd2[target_grid[i][j]] = self.targetsmax
+                    if one_more_flag == 1:
+                        if target_grid[i][j] in self.schindler:
+                            continue
+                        else:
+                            coordinates[target_grid[i][j]] = nedw
+                            self.schindler2.append(target_grid[i][j])
+                            self.listedd2[target_grid[i][j]] = 0
+                    else:
+                        coordinates[target_grid[i][j]] = nedw
+                        self.schindler2.append(target_grid[i][j])
+                        self.listedd2[target_grid[i][j]] = self.targetsmax
+
 
         new = self.schindler.copy()
         new3 = self.schindler3.copy()
-        random.shuffle(new)
+        if boss_flag != 1:
+            random.shuffle(new)
         coordinates2 = coordinates.copy()
         for i in range(len(self.schindler)):
             coordinates[self.schindler[i]] = coordinates2[new[i]]

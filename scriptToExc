@@ -1,0 +1,8 @@
+#!/bin/bash
+#PBS -lselect=1:mem=25gb
+#PBS -q power-bisker
+ 
+module load miniconda/miniconda3-4.7.12-environmentally
+conda activate Python3.9Plus
+cd /a/home/cc/students/enginer/omarbishara/GradProject/SelfAssembly 
+python main.py

@@ -9,7 +9,6 @@ from particle import Particle
 from target import Target
 from copy import copy
 import matplotlib.pyplot as plt
-import tkinter
 import matplotlib
 import os
 import matplotlib.markers as mmarkers
@@ -178,8 +177,12 @@ def show_grid(
                 id = grid[x][y]
                 inner_state = particles[id].inner_state
                 # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
-                lbl = f"{id}"
-                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+                lbl = f"{id+1}"
+                if inner_state == 0:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize=24, color='white')
+                else:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize=24)
+
     plt.title(title)
     # fig.colorbar(plot)
     cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
@@ -210,14 +213,14 @@ def show_grid2(
   #  results_dir = os.path.join(script_dir, 'Results/')
   #  if not os.path.isdir(results_dir):
   #      os.makedirs(results_dir)
-    matplotlib.use('TkAgg')
+    #matplotlib.use('TkAgg')
     palette = copy(plt.get_cmap("tab20", inner_states_number))
     palette.set_under("white", 1.0)
     palette2 = copy(plt.get_cmap("Set1", inner_states_number))
     palette2.set_under("white", 1.0)
     #palette2.colors[0] = (0.2800461361014994, 0.6269896193771626, 0.7024221453287197, 1)
     palette2.colors[0] = [1, 1, 0, 1.        ]
-    palette2.colors[0] = [1, 0, 0, 1.]
+    palette2.colors[1] = [1, 0, 0, 1.]
     #palette2.colors[0] = [0.6, 0.6, 0.6, 1.]
     inner_states_matrix = np.full((grid.shape[0], grid.shape[1]), -1, int)
     coordinates_gridold = np.zeros((grid.shape[0]*grid.shape[1], 2))
@@ -244,7 +247,8 @@ def show_grid2(
     ax.set_yticklabels([])
     ax.set_xticks([])
     ax.set_yticks([])
-
+    ax.tick_params(axis='y', which='minor', left=False)
+    ax.tick_params(axis='x', which='minor', bottom=False)
     ax.grid(which="minor", color="black", linestyle="-", linewidth=2)
 
     lett = np.shape(adjacency_matrix)
@@ -262,8 +266,12 @@ def show_grid2(
                 id = grid[x][y]
                 inner_state = particles[id].inner_state
                 # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
-                lbl = f"{id}"
-                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+                lbl = f"{id+1}"
+                if j == 0:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize=24, color='white')
+                else:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize=24)
+
     #cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))
     for xx in range(let):
         # statesituation = checkstateofparticlein[adjacency_matrix(xx, xx)]
@@ -289,7 +297,7 @@ def show_grid2(
                         # neighbors_mat (xx ,count(xx)) = adjacency_matrix(xx, yy)
                         v = 1
                         plt.sca(ax)
-                        plt.plot(connection_coordiantesy, connection_coordiantesx, marker=Line2D.filled_markers[j], color=palette2.colors[j], markersize=15)
+                        plt.plot(connection_coordiantesy, connection_coordiantesx, marker=Line2D.filled_markers[j], color=palette2.colors[j], markersize=10)
                       #  plt.xlim(-0.5, 4.5)
                        # plt.ylim(-0.5, 4.5)
    # plt.title(title)
@@ -334,7 +342,7 @@ def show_grid3(
     palette2 = copy(plt.get_cmap("Set1", inner_states_number))
     palette2.set_under("white", 1.0)
     #palette2.colors[0] = (0.2800461361014994, 0.6269896193771626, 0.7024221453287197, 1)
-    palette2.colors[1] = [1, 0, 0, 1.        ]
+    palette2.colors[1] = [1, 0, 0, 1.]
     palette2.colors[0] = [1, 1, 0, 1.]
     #palette2.colors[0] = [1, 1, 0, 1.        ]
     #palette2.colors[0] = 'r'
@@ -349,6 +357,8 @@ def show_grid3(
     plot = ax.imshow(
         inner_states_matrix, cmap=palette, vmin=-0.5, vmax=inner_states_number - 0.5
     )
+    ax.tick_params(axis='y', which='minor', left=False)
+    ax.tick_params(axis='x', which='minor', bottom=False)
 
     for ko in range(inner_states_number):
         BlackCoat = hey[ko]
@@ -357,21 +367,36 @@ def show_grid3(
             index2= BlackCoat[ii][1]
             x1 = 0.5 * (particles[index1].x+ particles[index2].x)
             y1 = 0.5 * (particles[index1].y + particles[index2].y)
-            plt.sca(ax)
-            plt.plot(y1, x1, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
-                     markersize=7)
+
+
+            if (np.abs(particles[index1].x- particles[index2].x)>1):
+                plt.sca(ax)
+                plt.plot(y1, 0-0.5, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
+                         markersize=4)
+                plt.plot(y1, grid.shape[0]-0.5, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
+                        markersize=4)
+            elif (np.abs(particles[index1].y - particles[index2].y) > 1):
+                plt.sca(ax)
+                plt.plot(0-0.5, x1, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
+                         markersize=4)
+                plt.plot(grid.shape[0]-0.5, x1, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
+                        markersize=4)
+            elif (particles[index1].inner_state == ko and particles[index2].inner_state == ko):
+                plt.sca(ax)
+                plt.plot(y1, x1, marker=Line2D.filled_markers[ko], color=palette2.colors[ko],
+                     markersize=4)
             #plt.xlim(-0.5, 4.5)
             #plt.ylim(-0.5, 4.5)
-
-            
-
     ax.set_xticks(np.arange(0, grid.shape[0], 1))
     ax.set_yticks(np.arange(0, grid.shape[1], 1))
     ax.set_xticklabels(np.arange(0, grid.shape[0], 1))
     ax.set_yticklabels(np.arange(0, grid.shape[1], 1))
     ax.set_xticks(np.arange(-0.5, grid.shape[0], 1), minor=True)
     ax.set_yticks(np.arange(-0.5, grid.shape[1], 1), minor=True)
-
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.set_xticks([])
+    ax.set_yticks([])
     ax.grid(which="minor", color="black", linestyle="-", linewidth=2)
 
     for x in range(grid.shape[0]):
@@ -380,8 +405,12 @@ def show_grid3(
                 id = grid[x][y]
                 inner_state = particles[id].inner_state
                 # print(f"x: {x} y: {y} id: {id} state: {inner_state}")
-                lbl = f"{id}"
-                ax.text(y, x, lbl, va="center", ha="center", fontweight="bold")
+                lbl = f"{id+1}"
+                if inner_state == 0:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize="8",color='white')
+                else:
+                    ax.text(y, x, lbl, va="center", ha="center", fontweight="bold", fontsize="8")
+
     #plt.title(title)
     # fig.colorbar(plot)
     #cax = plt.colorbar(plot, ticks=np.arange(0, inner_states_number))

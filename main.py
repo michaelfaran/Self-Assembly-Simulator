@@ -57,27 +57,35 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
     with open(results_dir + filename, "w") as outfile:
         # Way in python to say- open this file. no end, just indientation.
         # Michael add of Entropy calculation
-        TurnMaxNumber = 5* (10 **2)
+        TurnMaxNumber = 5* (10 **4)
         #TurnMaxNumber = 10000
-        big_flag = 1
+        big_flag = 0
         mini_flag_save =0
+        like_a_boss_flag= 1
+        one_more_flag =0
         res = 10**4
         res_big = 10**4
         #TurnMaxNumber = 10**2
         #res = 10
-        RunMax =5
+        RunMax =1
+        muMax = 2
+        muMin = 0
+        mu_factor = 1
+        """
+                muMax = 10
+        muMin = 0
+        mu_factor = 0.2
+        """
         #20
         unitt = 1
-        muMax = 2
         #3
-        muMin = 1
         unittt = 2
         #JMin =int(6*unittt)
-        JMin = 9
-        JMax = int(4*unittt)
-        #JMax = 9
+        JMin = int(8)
+        JMax = int(3.5*unittt)
+        JMax = int(7)
         energy_step = 1
-        mu_factor = 1
+
 
 #22
        #should I hide it?
@@ -95,7 +103,8 @@ def simulation_manager(cfg: SimulationCfg, num_targets: int, num_of_runs_per_one
                 "beginning sim with with strong interaction = {}------\n".format(
                   Ja)
             )
-
+            cfg.like_a_boss_flag = like_a_boss_flag
+            cfg.one_more_flag = one_more_flag
             for mu in range(muMin, muMax):
                 mu =round(mu_factor * mu,1)
                 # Different drives choices for the simulation
@@ -308,9 +317,8 @@ if __name__ == "__main__":
     # What would happen if you run this inside python sledom and not outside.
     num_targets_list = [1, 2, 3, 4, 5, 10, 15, 20]
     num_targets_list = [1,2,3,4]
-    num_targets_list = [2]
     num_of_runs_per_one = [1,2,3,4,5,6,7,8,9,10,11,12]
-    #num_targets_list = [2]
+    num_targets_list = [2]
     #num_of_runs_per_one = [1]
     # Changing the number of targets.
     arg_list = []

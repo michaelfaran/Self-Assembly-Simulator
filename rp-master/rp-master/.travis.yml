@@ -1,0 +1,9 @@
+language: matlab
+matlab:
+ - latest  # Default MATLAB release on Travis CI
+
+script: 
+ - cd ./tests/; matlab -batch 'test_embed'
+ - cd ./tests/; matlab -batch 'test_rp'
+ - cd ./tests/; matlab -batch 'test_rp_iso'
+ - cd ./tests/; matlab -batch 'test_rqa'
