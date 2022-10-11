@@ -16,6 +16,7 @@ import re
 import random
 import gzip
 
+#This is the main function for two targets currently, needs to be readjusted in the future for more than two targets,
 
 CFG_FILE = "cfg.json"
 # Importing paramaters for simulation
